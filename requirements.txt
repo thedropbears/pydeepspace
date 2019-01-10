@@ -1,0 +1,5 @@
+pyfrc ~= 2019.0
+
+coverage
+pyflakes
+black
