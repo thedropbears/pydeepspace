@@ -1,18 +1,20 @@
+#!/usr/bin/env python3
+
 import magicbot
 import wpilib
 
 
 class Robot(magicbot.MagicRobot):
     def createObjects(self):
-        """Create motors and stuff here"""
+        """Create motors and stuff here."""
         pass
 
     def teleopInit(self):
-        """Called when teleop starts; optional"""
+        """Initialise driver control."""
         pass
 
     def teleopPeriodic(self):
-        """Called on each iteration of the control loop"""
+        """Allow the drivers to control the robot."""
         pass
 
 
