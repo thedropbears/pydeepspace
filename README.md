@@ -11,12 +11,14 @@ pip3 install -r requirements.txt
 ```
 
 ## Style
-This codebase is adheres to the code style enforced by the black autoformatter:
+This codebase adheres to the code style enforced by the black autoformatter:
 ```bash
 black .
 ```
 
 This is enforced by CI.
+
+See [PEP 8](https://www.python.org/dev/peps/pep-0008/) on naming conventions.
 
 Docstrings should follow Google style.
 See also [PEP 257](https://www.python.org/dev/peps/pep-0257/).
