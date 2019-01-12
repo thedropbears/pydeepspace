@@ -32,26 +32,24 @@ pyflakes .
 This is enforced by CI.
 
 ## Run
-> Note: if on Windows, mentally replace all instances of `python3` below with `py -3`.
-
 ### Simulation (desktop)
 ```bash
-python3 robot.py sim
+./robot.py sim
 ```
 
 ### Tests
 ```bash
-python3 robot.py test
+./robot.py test
 ```
 
 If you wish to collect coverage data, use this instead:
 ```bash
-python3 robot.py coverage test
+./robot.py coverage test
 ```
 
 ### Deploy to roboRIO
 ```bash
-python3 robot.py deploy
+./robot.py deploy
 ```
 
 This codebase is set up to deploy to 4774's robot. (Use the `--robot` option to override this.)
