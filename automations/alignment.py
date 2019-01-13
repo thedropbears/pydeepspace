@@ -1,5 +1,6 @@
 import math
 import wpilib
+import numpy as np
 
 from vision import Vision
 from magicbot.state_machine import StateMachine, state
@@ -20,9 +21,20 @@ class AlignmentStateMachine(StateMachine):
     chassis: Chassis
     imu: IMU
 
-    def __init__(self, angle_tolerance, range_tolerance):
+    def __init__(
+        self,
+        angle_tolerance,
+        closing_step_size,
+        max_target_tape_loops,
+        approach_offset_angle,
+    ):
         self.angle_tolerance = angle_tolerance
-        self.range_tolerance = range_tolerance
+        self.closing_step_size = closing_step_size
+        self.target_tape_loops = 0
+        self.max_target_tape_loops = max_target_tape_loops
+        self.approach_offset_angle = approach_offset_angle
+        self.close_speed_denominator = 4
+        self.close_side_speed_denominator = 10
 
     @state(first=True)
     def check_ground(self):
@@ -45,15 +57,24 @@ class AlignmentStateMachine(StateMachine):
         hardware, this is handled by the drivebase control system
         """
         heading = self.imu.getAngle()
-        if (abs(self.vision.ground_tape_angle) > self.angle_tolerance) or (
-            abs(self.vision.ground_tape_distance) > self.range_tolerance
-        ):
+        if abs(self.vision.ground_tape_angle) > self.angle_tolerance:
+            vision_vector = np.array(
+                math.cos(self.vision.ground_tape_angle),
+                math.sin(self.vision.ground_tape_angle),
+            )
+            if self.vision.ground_tape_angle - heading > 0:
+                rotated_vision_vector = self.rotate(vision_vector, 90)
+            elif self.vision.ground_tape_angle - heading < 0:
+                rotated_vision_vector = self.rotate(vision_vector, -90)
+            else:
+                rotated_vision_vector = vision_vector
             self.chassis.set_inputs(
-                self.vision.ground_tape_distance
-                * math.cos(self.vision.ground_tape_angle),
-                self.vision.ground_tape_distance
-                * math.sin(self.vision.ground_tape_angle),
+                vision_vector[0] / self.close_speed_denominator
+                + rotated_vision_vector[0] / self.close_side_speed_denominator,
+                vision_vector[1] / self.close_speed_denominator
+                + rotated_vision_vector[1] / self.close_side_speed_denominator,
                 heading + self.vision.ground_tape_angle,
+                # TODO tune these magic numbers
             )
         else:
             self.done()
@@ -70,15 +91,46 @@ class AlignmentStateMachine(StateMachine):
         hardware, this is handled by the drivebase control system
         """
         heading = self.imu.getAngle()
-        if (abs(self.vision.target_tape_angle) > self.angle_tolerance) or (
-            abs(self.vision.target_tape_distance) > self.range_tolerance
-        ):
-            self.chassis.set_inputs(
-                self.vision.target_tape_distance
-                * math.cos(self.vision.target_tape_angle),
-                self.vision.target_tape_distance
-                * math.sin(self.vision.target_tape_angle),
-                heading + self.vision.ground_tape_angle,
+        if abs(self.vision.target_tape_angle) > self.angle_tolerance:
+            vision_vector = np.array(
+                math.cos(self.vision.target_tape_angle),
+                math.sin(self.vision.target_tape_angle),
             )
+            rotated_vision_vector = self.rotate(
+                vision_vector, self.approach_offset_angle
+            )
+            self.chassis.set_inputs(
+                rotated_vision_vector[0],
+                rotated_vision_vector[1],
+                heading + self.vision.target_tape_angle,
+            )
+        elif self.target_tape_loops >= self.max_target_tape_loops:
+            self.next_state_now("move_closer")
         else:
-            self.next_state_now("ground_tape_align")
+            self.target_tape_loops += 1
+            self.next_state_now("check_ground")
+
+    @state
+    def move_closer(self, initial_call):
+        """
+        Drive towards the target to try to find the ground tape.
+
+        After the robot has failed to spot the ground tape, move forwards
+        transition back to the check ground state
+        """
+        if initial_call:
+            starting_odometry = self.chassis.odometry
+        heading = self.imu.getAngle()
+        self.chassis.set_inputs(
+            math.cos(self.vision.target_tape_angle),
+            math.sin(self.vision.target_tape_angle),
+            heading + self.vision.ground_tape_angle,
+        )
+        if self.chassis.odometry - starting_odometry > self.closing_step_size:
+            self.next_state_now("check_ground")
+
+    def rotate(self, A, angle):
+        rotation_matrix = np.array(
+            [[math.cos(angle), math.sin(angle)], [-math.sin(angle), math.cos(angle)]]
+        )
+        return A @ rotation_matrix
