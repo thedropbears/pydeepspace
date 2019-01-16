@@ -1,11 +1,6 @@
-import math
-import wpilib
-import numpy as np
-
 from components.vision import Vision
 from magicbot.state_machine import StateMachine, state
 from pyswervedrive.swervechassis import SwerveChassis
-from utilities.navx import NavX
 from magicbot import tunable
 
 vision = Vision()
@@ -21,14 +16,13 @@ class Aligner(StateMachine):
     """
 
     chassis: SwerveChassis
-    imu: NavX
 
     def setup(self):
         self.loop_counter = 0
 
-    kP_x = tunable(0.5) # forwards
-    kP_y = tunable(1) # m/s
-    tolerance = tunable(0.05) # % of camera view
+    kP_x = tunable(0.5)  # forwards
+    kP_y = tunable(1)  # m/s
+    tolerance = tunable(0.05)  # % of camera view
 
     @state(first=True)
     def target_tape_align(self, initial_call):
