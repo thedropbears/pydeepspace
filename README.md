@@ -1,5 +1,5 @@
 # pydeepspace
-[![Build Status](https://travis-ci.org/thedropbears/pydeepspace.svg?branch=master)](https://travis-ci.org/thedropbears/pydeepspace)
+[![Build Status](https://travis-ci.com/thedropbears/pydeepspace.svg?branch=master)](https://travis-ci.com/thedropbears/pydeepspace)
 [![codecov](https://codecov.io/gh/thedropbears/pydeepspace/branch/master/graph/badge.svg)](https://codecov.io/gh/thedropbears/pydeepspace)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
