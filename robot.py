@@ -6,6 +6,7 @@ import magicbot
 import wpilib
 from networktables import NetworkTables
 
+from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
 from pyswervedrive.module import SwerveModule
 from utilities.functions import rescale_js, constrain_angle
@@ -58,6 +59,7 @@ class Robot(magicbot.MagicRobot):
             y_pos=-y_dist,
         )
         self.imu = NavX()
+        self.vision = Vision()
 
         self.sd = NetworkTables.getTable("SmartDashboard")
         wpilib.SmartDashboard.putData("Gyro", self.imu.ahrs)

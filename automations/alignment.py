@@ -3,8 +3,6 @@ from magicbot.state_machine import StateMachine, state
 from pyswervedrive.swervechassis import SwerveChassis
 from magicbot import tunable
 
-vision = Vision()
-
 
 class Aligner(StateMachine):
     """
@@ -16,6 +14,7 @@ class Aligner(StateMachine):
     """
 
     chassis: SwerveChassis
+    vision: Vision
 
     def setup(self):
         self.loop_counter = 0
@@ -37,7 +36,7 @@ class Aligner(StateMachine):
         tolerance = self.tolerance
         if initial_call:
             self.loop_counter = 0
-        error = vision.get_target_tape_error()
+        error = self.vision.get_target_tape_error()
         if error is None:
             self.loop_counter += 1
             if self.loop_counter > 3:
