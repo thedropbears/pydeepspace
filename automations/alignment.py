@@ -47,7 +47,7 @@ class Aligner(StateMachine):
         else:
             if abs(error) > tolerance:
                 self.chassis.set_inputs(
-                    (1-abs(error))*kP_x, error*kP_y, 0, field_oriented=False
+                    (1 - abs(error)) * kP_x, error * kP_y, 0, field_oriented=False
                 )
             else:
                 self.done()

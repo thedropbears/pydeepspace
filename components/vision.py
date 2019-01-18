@@ -4,9 +4,7 @@ from networktables import NetworkTables
 
 
 class Vision:
-
     def __init__(self):
-        """This is called after variables are injected by magicbot."""
         self.nt = NetworkTables.getTable("/vision")
         self.target_tape_error = self.nt.getEntry("target_tape_error")
         self.target_tape_error.addListener(
@@ -22,7 +20,7 @@ class Vision:
         self.target_tape_error_value = value
 
     def get_target_tape_error(self):
-        if self.target_tape_error_value < -1 or self.target_tape_error_value > 1:
+        if not -1 <= self.target_tape_error_value <= 1:
             return None
         elif hal.isSimulation():
             return 0
