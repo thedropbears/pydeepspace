@@ -1,3 +1,4 @@
+### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -103,5 +104,26 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-# RobotPy
+### macOS ###
+*.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+### Vim ###
+.sw[a-p]
+.*.sw[a-p]
+*~
+
+### JetBrains (IntelliJ IDEA, PyCharm) ###
+.idea/
+# file-based project format
+*.iws
+
+### VS Code ###
+.vscode/
+
+### RobotPy ###
 networktables.ini
