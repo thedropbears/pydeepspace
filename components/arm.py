@@ -28,17 +28,11 @@ class Arm:
     def lower_bot_ext(self):
         self.bot_extension_on = False
 
-    def toggle_bot_ext(self):
-        self.bot_extension_on = not self.bot_extension_on
-
     def raise_top_ext(self):
         self.top_extension_on = True
 
     def lower_top_ext(self):
         self.top_extension_on = False
-
-    def toggle_top_ext(self):
-        self.top_extension_on = not self.top_extension_on
 
     @magicbot.feedback
     def bot_ext_pos(self):
