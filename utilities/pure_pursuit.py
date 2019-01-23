@@ -15,11 +15,10 @@ class PurePursuit:
     # speed_modifier = tunable(0)
     # ending_tolerance = tunable(0) # m
 
-    def __init__(self, look_ahead, speed_modifier, ending_tolerance):
+    def __init__(self, look_ahead, ending_tolerance):
         self.waypoints = []
         self.current_waypoint_number = 0
         self.look_ahead = look_ahead
-        self.speed_modifier = speed_modifier
         self.ending_tolerance = ending_tolerance
 
     def find_intersections(self, waypoint_start, waypoint_end, robot_position):
@@ -31,7 +30,7 @@ class PurePursuit:
         """
         x_1, y_1 = waypoint_start[0], waypoint_start[1]
         x_2, y_2 = waypoint_end[0], waypoint_end[1]
-        robot_x, robot_y, heading = robot_position
+        robot_x, robot_y, _ = robot_position
         x_2 -= robot_x
         x_1 -= robot_x
         y_2 -= robot_y
@@ -40,7 +39,6 @@ class PurePursuit:
         d_x = x_2 - x_1
         d_y = y_2 - y_1
         d_r = math.sqrt(d_x ** 2 + d_y ** 2)
-        # D = np.array(((x_1, y_1), (x_2, y_2))) will need to be vectorised
         D = x_1 * y_2 - x_2 * y_1
         r = self.look_ahead
         discriminent = r ** 2 * d_r ** 2 - D ** 2
@@ -78,6 +76,7 @@ class PurePursuit:
 
     def compute_direction(self, robot_position):
         """Find the goal_point and convert it to relative co-ordinates"""
+        changed_waypoint = self.check_progress(self.waypoints[self.current_waypoint_number + 1], robot_position)
         if self.current_waypoint_number + 1 >= len(self.waypoints):
             return
         goal_point = self.find_intersections(
@@ -85,20 +84,41 @@ class PurePursuit:
             self.waypoints[self.current_waypoint_number + 1],
             robot_position
         )
-        goal_point -= robot_position[:2]
-        goal_point = self.robot_orient(*goal_point, robot_position[2])
-        self.check_progress(self.waypoints[self.current_waypoint_number + 1], robot_position)
+        if goal_point is None:
+            # if we cant find an intersection between the look_ahead and path
+            # use the closest point on the segment as our goal
+            
+            goal_point = self.find_closest_path_point(self.waypoints[self.current_waypoint_number],
+            self.waypoints[self.current_waypoint_number + 1], robot_position)
+        # goal_point -= robot_position[:2]
+        # goal_point = self.robot_orient(*goal_point, robot_position[2])
         print(goal_point)
-        return goal_point
+        self.goal_point = goal_point
+        return goal_point, changed_waypoint
+
 
     def check_progress(self, end_waypoint, robot_position):
         """Check if we are close enough to begin the path to the next end_waypoint"""
         end_point_x, end_point_y = end_waypoint[0], end_waypoint[1]
-        robot_x, robot_y, heading = robot_position
+        robot_x, robot_y, _ = robot_position
         difference_x = abs(end_point_x) - abs(robot_x)
         difference_y = abs(end_point_y) - abs(robot_y)
         if math.sqrt(difference_x ** 2 + difference_y ** 2) < self.ending_tolerance:
             self.current_waypoint_number += 1
+            return True
+
+    def find_closest_path_point(self, segment_start, segment_end, robot_position):
+        """
+        Finds the closest point to the robot on the path.
+        """
+        x_1, y_1 = segment_start
+        x_2, y_2 = segment_end
+        x_robot, y_robot, _ = robot_position
+        m = (y_1 - y_2) / (x_1 - x_2)
+        m_orth = -1 / m
+        x = (y_1 - y_robot + m_orth * x_robot - m * x_1) / (m_orth - m)
+        y = m * (x - x_1) + y_1
+        return x, y
 
     def sgn(self, number):
         """Returns the sign of a number, 0 is positive"""
