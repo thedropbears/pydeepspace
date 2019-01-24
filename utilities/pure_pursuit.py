@@ -62,8 +62,8 @@ class PurePursuit:
                 return intersection_1
             intersection_2[0] = (left_x - right_x) / denominator
             intersection_2[1] = (left_y - right_y) / denominator
-            if np.linalg.norm(abs(intersection_1) - abs(waypoint_end)) < np.linalg.norm(
-                abs(intersection_2) - abs(waypoint_end)
+            if np.linalg.norm((intersection_1) - (waypoint_end)) < np.linalg.norm(
+                (intersection_2) - (waypoint_end)
             ):
                 return intersection_1
             else:
@@ -76,7 +76,6 @@ class PurePursuit:
 
     def compute_direction(self, robot_position):
         """Find the goal_point and convert it to relative co-ordinates"""
-        changed_waypoint = self.check_progress(self.waypoints[self.current_waypoint_number + 1], robot_position)
         if self.current_waypoint_number + 1 >= len(self.waypoints):
             return
         goal_point = self.find_intersections(
@@ -94,6 +93,7 @@ class PurePursuit:
         # goal_point = self.robot_orient(*goal_point, robot_position[2])
         print(goal_point)
         self.goal_point = goal_point
+        changed_waypoint = self.check_progress(self.waypoints[self.current_waypoint_number + 1], robot_position)
         return goal_point, changed_waypoint
 
 
