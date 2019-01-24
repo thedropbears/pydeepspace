@@ -16,6 +16,8 @@ class SwerveChassis:
     imu: NavX
     module_a: SwerveModule
     module_b: SwerveModule
+    module_c: SwerveModule
+    module_d: SwerveModule
 
     # tunables here purely for debugging
     odometry_x = tunable(0)
@@ -49,7 +51,7 @@ class SwerveChassis:
         self.heading_pid.setOutputRange(-2, 2)
         self.heading_pid.setContinuous()
         self.heading_pid.enable()
-        self.modules = [self.module_a, self.module_b]
+        self.modules = [self.module_a, self.module_b, self.module_c, self.module_d]
 
         self.odometry_x = 0
         self.odometry_y = 0

@@ -30,7 +30,7 @@ def rescale_js(
     else:
         a = math.log(exponential + 1) / (1 - deadzone)
         value = (math.exp(a * (value - deadzone)) - 1) / exponential
-    return value * value_negative * rate
+    return rate * value_negative * value
 
 
 def constrain_angle(angle):
