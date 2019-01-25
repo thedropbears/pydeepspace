@@ -55,10 +55,18 @@ class CargoManager(StateMachine):
         self.engage(initial_state="outtaking_cargo", force=force)
 
     @state(must_finish=True)
-    def outtaking_cargo(self):
+    def outtaking_cargo(self, initial_call):
         if not self.override:
-            self.align.align()
-        self.intake.outtake()
+            if initial_call:
+                self.align.align()
+            if not self.align.is_executing:
+                if self.align.successful:
+                    self.intake.outtake()
+                else:
+                    self.done()
+        else:
+            self.intake.outtake()
+
         if not self.intake.contained():
             self.intake.stop()
             self.done()
