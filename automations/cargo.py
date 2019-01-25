@@ -45,6 +45,8 @@ class CargoManager(StateMachine):
     def intaking_cargo(self):
         if self.intake.contained():
             self.intake.stop()
+            self.arm.raise_bottom_piston()
+            self.arm.lower_top_piston()
             self.done()
         else:
             self.intake.intake()
