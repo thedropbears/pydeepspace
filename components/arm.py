@@ -38,7 +38,7 @@ class Arm:
         elif not self.main_piston_on and self.helper_piston_on:
             self.lower_helper_piston()
             self.lower_main_piston()
-    
+
     def move_arm_up_state(self):
         if not self.main_piston_on and self.helper_piston_on:
             self.raise_main_piston()
