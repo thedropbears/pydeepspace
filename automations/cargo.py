@@ -1,59 +1,62 @@
-from magicbot import state
+from magicbot import state, StateMachine
 
-from automations.align import AlignBase
+from automations.align import Aligner
 from components.arm import Arm
 from components.intake import Intake
 
 
-class CargoManager(AlignBase):
+class CargoManager(StateMachine):
 
     arm: Arm
     intake: Intake
+    align: Aligner
 
-    def start_intake(self, force=False):
-        self.engage(initial_state="lower_floor", force=force)
+    def __init__(self):
+        self.override = False
 
-    @state(first=True)
-    def lower_floor(self):
-        self.arm.lower_bot_ext()
-        self.arm.lower_top_ext()
+    def intake_floor(self, force=False):
+        self.engage(initial_state="move_to_floor", force=force)
+
+    @state(first=True, must_finish=True)
+    def move_to_floor(self):
+        self.arm.lower_top_piston()
+        self.arm.lower_bottom_piston()
+        self.next_state("intaking_cargo")
+
+    def intake_depot(self, force=False):
+        self.engage(initial_state="move_to_depot", force=force)
+
+    @state
+    def move_to_depot(self):
+        self.arm.lower_bottom_piston()
+        self.arm.lower_top_piston()
+        self.next_state("intaking_cargo")
+
+    def intake_loading(self, force=False):
+        self.engage(initial_state="move_to_loading_station", force=force)
+
+    @state
+    def move_to_loading_station(self):
+        self.arm.raise_top_piston()
+        self.arm.raise_bottom_piston()
         self.next_state("intaking_cargo")
 
     @state(must_finish=True)
     def intaking_cargo(self):
-        self.intake.intake()
         if self.intake.contained():
             self.intake.stop()
             self.done()
+        else:
+            self.intake.intake()
 
-    def outtake_cargo_rocket(self, force=False):
-        self.engage(initial_state="raise_rocket", force=force)
-
-    @state
-    def raise_rocket(self):
-        self.arm.lower_top_ext()
-        self.arm.raise_bot_ext()
-        self.next_state_now("aligning")
-
-    def outtake_cargo_ship(self, force=False):
-        self.engage(initial_state="raise_cargo", force=force)
-
-    @state
-    def raise_cargo(self):
-        self.arm.raise_top_ext()
-        self.arm.raise_bot_ext()
-        self.next_state_now("aligning")
-
-    @state
-    def successful_align(self):
-        self.next_state_now("outtaking_cargo")
-
-    @state
-    def failed_align(self):
-        self.done()
+    def start_outtake(self, force=False):
+        self.engage(initial_state="outtaking_cargo", force=force)
 
     @state(must_finish=True)
     def outtaking_cargo(self):
+        if not self.override:
+            self.align.align()
         self.intake.outtake()
         if not self.intake.contained():
+            self.intake.stop()
             self.done()
