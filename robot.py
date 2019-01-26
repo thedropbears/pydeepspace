@@ -73,6 +73,9 @@ class Robot(magicbot.MagicRobot):
 
         self.spin_rate = 1.5
 
+    def disabledPeriodic(self):
+        self.imu.resetHeading()
+
     def teleopInit(self):
         """Called when teleop starts; optional"""
         self.chassis.set_inputs(0, 0, 0)
@@ -121,10 +124,6 @@ class Robot(magicbot.MagicRobot):
             )
         else:
             self.chassis.set_inputs(0, 0, 0)
-            # self.module_a.steer_motor.stop()
-            # self.module_b.steer_motor.stop()
-            # self.module_a.drive_motor.stop()
-            # self.module_b.drive_motor.stop()
 
         if joystick_hat != -1:
             constrained_angle = -constrain_angle(math.radians(joystick_hat))
@@ -155,11 +154,21 @@ class Robot(magicbot.MagicRobot):
     def robotPeriodic(self):
         # super().robotPeriodic()
         self.sd.putNumber("imu_heading", self.imu.getAngle())
+        self.sd.putNumber("odometry_x", self.chassis.position[0])
+        self.sd.putNumber("odometry_y", self.chassis.position[1])
         for module in self.chassis.modules:
             self.sd.putNumber(
                 module.name + "_pos_steer",
                 module.steer_motor.getSelectedSensorPosition(0),
             )
+            self.sd.putNumber(
+                module.name + "_pos_drive",
+                module.drive_motor.getSelectedSensorPosition(0),
+            )
+            try:
+                self.sd.putNumber(module.name + "_setpoint", module.setpoint)
+            except:
+                pass
 
 
 if __name__ == "__main__":

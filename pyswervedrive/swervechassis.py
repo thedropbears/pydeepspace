@@ -276,7 +276,7 @@ class SwerveChassis:
 
     @property
     def position(self):
-        return np.array([[self.odometry_x], [self.odometry_y]], dtype=float)
+        return self.odometry_x, self.odometry_y
 
     @property
     def speed(self):
