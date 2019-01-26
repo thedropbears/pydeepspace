@@ -1,8 +1,6 @@
 import math
-
 import ctre
 from networktables import NetworkTables
-
 from utilities.functions import constrain_angle
 
 
@@ -81,7 +79,7 @@ class SwerveModule:
         # changes sign of motor throttle vilues
         self.steer_motor.setInverted(self.reverse_steer_direction)
 
-        self.steer_motor.config_kP(0, 5, 10)
+        self.steer_motor.config_kP(0, 2.5, 10)
         self.steer_motor.config_kI(0, 0.0, 10)
         self.steer_motor.config_kD(0, 0.0, 10)
         self.steer_motor.selectProfileSlot(0, 0)
@@ -229,8 +227,8 @@ class SwerveModule:
         # will unwind
         azimuth_to_set = self.current_azimuth_sp + delta
         # convert the direction to encoder counts to set as the closed-loop setpoint
-        setpoint = azimuth_to_set * self.STEER_COUNTS_PER_RADIAN + self.steer_enc_offset
-        self.steer_motor.set(ctre.ControlMode.Position, setpoint)
+        self.setpoint = azimuth_to_set * self.STEER_COUNTS_PER_RADIAN + self.steer_enc_offset
+        self.steer_motor.set(ctre.ControlMode.Position, self.setpoint)
         self.current_azimuth_sp = azimuth_to_set
 
         if not self.absolute_rotation:
