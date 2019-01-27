@@ -40,9 +40,9 @@ class SwerveChassis:
         # Heading PID controller
         self.heading_pid_out = ChassisPIDOutput()
         self.heading_pid = PIDController(
-            Kp=3.0,
+            Kp=2.0,
             Ki=0.0,
-            Kd=0.0,
+            Kd=1.0,
             source=self.imu.getAngle,
             output=self.heading_pid_out,
             period=1 / 50,

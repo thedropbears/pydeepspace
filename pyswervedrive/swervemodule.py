@@ -101,7 +101,7 @@ class SwerveModule:
         # changes sign of motor throttle values
         self.drive_motor.setInverted(self.reverse_drive_direction)
         # TODO: change back to original constants once we get on to real robot
-        self.drive_motor.config_kP(0, 0.005, 10)  # 0.5, 0.002, 0,
+        self.drive_motor.config_kP(0, 0.1, 10)  # 0.5, 0.002, 0,
         self.drive_motor.config_kI(0, 0, 10)
         self.drive_motor.config_kD(0, 0, 10)
         self.drive_motor.config_kF(0, 1024.0 / self.drive_free_speed, 10)

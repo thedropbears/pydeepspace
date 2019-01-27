@@ -13,8 +13,9 @@ from utilities.navx import NavX
 
 
 class Robot(magicbot.MagicRobot):
-    module_drive_free_speed: float = 84000.0  # encoder ticks / 100 ms
-    offset_rotation_rate = 100
+    module_drive_free_speed: float = 94000.0  # encoder ticks / 100 ms
+    #  TODO do the maths to verify that this is correct
+    offset_rotation_rate = 40
     chassis: SwerveChassis
 
     def createObjects(self):
@@ -40,8 +41,8 @@ class Robot(magicbot.MagicRobot):
             x_pos=-x_dist,
             y_pos=y_dist,
             drive_free_speed=Robot.module_drive_free_speed,
+            reverse_drive_encoder=True,
             reverse_steer_encoder=True,
-            reverse_drive_direction=True,
         )
         self.module_c = SwerveModule(  # top right module now back left
             "c",
@@ -66,6 +67,7 @@ class Robot(magicbot.MagicRobot):
         self.imu = NavX()
 
         self.sd = NetworkTables.getTable("SmartDashboard")
+        wpilib.SmartDashboard.putData("gyro", self.imu.ahrs)
 
         # boilerplate setup for the joystick
         self.joystick = wpilib.Joystick(0)
@@ -77,17 +79,12 @@ class Robot(magicbot.MagicRobot):
         self.imu.resetHeading()
 
     def teleopInit(self):
-        """Called when teleop starts; optional"""
+        """Initialise driver control."""
         self.chassis.set_inputs(0, 0, 0)
 
     def teleopPeriodic(self):
-        """
-        Process inputs from the driver station here.
-        This is run each iteration of the control loop before magicbot components are executed.
-        """
-        if self.joystick.getRawButtonPressed(10):
-            self.imu.resetHeading()
-            self.chassis.set_heading_sp(0)
+        """Allow the drivers to control the robot."""
+        self.chassis.heading_hold_off()
 
         throttle = (1 - self.joystick.getThrottle()) / 2
         self.sd.putNumber("joy_throttle", throttle)
@@ -127,7 +124,8 @@ class Robot(magicbot.MagicRobot):
             self.chassis.set_heading_sp(constrained_angle)
 
     def robotPeriodic(self):
-        # super().robotPeriodic()
+        super().robotPeriodic()
+
         self.sd.putNumber("imu_heading", self.imu.getAngle())
         self.sd.putNumber("odometry_x", self.chassis.position[0])
         self.sd.putNumber("odometry_y", self.chassis.position[1])
@@ -139,6 +137,10 @@ class Robot(magicbot.MagicRobot):
             self.sd.putNumber(
                 module.name + "_pos_drive",
                 module.drive_motor.getSelectedSensorPosition(0),
+            )
+            self.sd.putNumber(
+                module.name + "_drive_motor_output",
+                module.drive_motor.getMotorOutputPercent(),
             )
 
 
