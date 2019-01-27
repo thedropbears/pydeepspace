@@ -10,8 +10,8 @@ from utilities.navx import NavX
 
 
 class SwerveChassis:
-    WIDTH = 1
-    LENGTH = 0.88
+    WIDTH = 0.75
+    LENGTH = 0.75
 
     imu: NavX
     module_a: SwerveModule
@@ -42,7 +42,7 @@ class SwerveChassis:
         self.heading_pid = PIDController(
             Kp=3.0,
             Ki=0.0,
-            Kd=5.0,
+            Kd=0.0,
             source=self.imu.getAngle,
             output=self.heading_pid_out,
             period=1 / 50,

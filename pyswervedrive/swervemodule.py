@@ -1,5 +1,6 @@
 import math
 import ctre
+import hal
 from networktables import NetworkTables
 from utilities.functions import constrain_angle
 
@@ -40,6 +41,10 @@ class SwerveModule:
         reverse_drive_direction: bool = False,
         reverse_drive_encoder: bool = False,
     ):
+        if hal.isSimulation():
+            # we aren't using the PID simulation here
+            steer_talon._use_notifier = False
+            drive_talon._use_notifier = False
 
         self.name = name
 
