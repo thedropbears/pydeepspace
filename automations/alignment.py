@@ -49,7 +49,7 @@ class Aligner(StateMachine):
                 self.successful = False
                 self.done()
                 return
-        if self.vision.get_ground_tape_error_y is not None:
+        if self.vision.get_ground_tape_y is not None:
             self.next_state_now("ground_tape_align")
         if abs(error) > self.target_tape_tolerance:
             vy = error * self.target_tape_kP_y
@@ -62,8 +62,8 @@ class Aligner(StateMachine):
     def ground_tape_align(self, initial_call):
         if initial_call:
             self.loop_counter = 0
-        error_y = self.vision.get_ground_tape_error_y
-        error_angle = self.vision.get_ground_tape_error_angle
+        error_y = self.vision.get_ground_tape_y
+        error_angle = self.vision.get_ground_tape_angle()
         if error_y is None:
             self.loop_counter += 1
             if self.loop_counter > 3:
