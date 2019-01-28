@@ -1,6 +1,7 @@
 import math
 
 from components.vision import Vision
+from components.hatch import Hatch
 from magicbot.state_machine import StateMachine, state
 from pyswervedrive.swervechassis import SwerveChassis
 from magicbot import tunable
@@ -17,10 +18,15 @@ class Aligner(StateMachine):
 
     chassis: SwerveChassis
     vision: Vision
+    hatch: Hatch
 
     def setup(self):
         self.loop_counter = 0
         self.successful = False
+        self.hatch_deposit = 0
+        self.hatch_intake = 1
+        self.cargo_outake = 2
+        self.mode = self.hatch_deposit
 
     target_tape_kP_x = tunable(0.5)  # forwards
     target_tape_kP_y = tunable(1)  # m/s
@@ -79,10 +85,16 @@ class Aligner(StateMachine):
                 error_y = 0
             else:
                 self.chassis.set_inputs(0, 0, error_y * self.ground_tape_kP_y)
-            if self.vision.within_deposit_range:
-                vx = 0
-            else:
-                vx = 0.5
+            if self.mode == self.hatch_deposit:
+                if self.vision.within_deposit_range:
+                    vx = 0
+                else:
+                    vx = 0.5
+            elif self.mode == self.hatch_intake:
+                if self.hatch.contained():
+                    vx = 0
+                else:
+                    vx = 0.5
             if vx and error_y and error_angle == 0:
                 self.successful = True
                 self.done()
