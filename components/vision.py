@@ -1,7 +1,5 @@
-import hal
 import math
 
-from networktables import NetworkTables
 from networktables.util import ntproperty
 
 
