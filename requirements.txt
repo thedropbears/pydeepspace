@@ -1,4 +1,9 @@
 pyfrc ~= 2019.0
+robotpy-ctre ~= 2019.0
+robotpy-navx ~= 2019.0
+robotpy-rev
+wpilib-controller
+numpy ~= 1.15
 
 coverage
 pyflakes
