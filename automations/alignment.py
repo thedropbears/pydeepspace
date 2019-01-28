@@ -1,8 +1,6 @@
-import math
-
 from components.vision import Vision
 from magicbot.state_machine import StateMachine, state
-from pyswervedrive.swervechassis import SwerveChassis
+from pyswervedrive.chassis import SwerveChassis
 from magicbot import tunable
 
 
@@ -14,6 +12,7 @@ class Aligner(StateMachine):
     objectives from longer range and fine adjustment using the ground
     tape once we are able to see it.
     """
+
     VERBOSE_LOGGING = True
 
     chassis: SwerveChassis
@@ -51,11 +50,11 @@ class Aligner(StateMachine):
                 self.chassis.set_inputs(0, 0, 0)
                 self.done()
         else:
-            # if self.vision.get_ground_tape_y is not None:
-            #     self.next_state_now("ground_tape_align")
             vy = error * self.target_tape_kP_y
             vx = (1 - abs(error)) * self.target_tape_kP_x
             self.chassis.set_inputs(vy, -vx, 0, field_oriented=False)
+            # Rotate our co-ordinate system because the hatch mechanism is
+            # on the 'side' of the robot
             if self.vision.within_deposit_range:
                 self.next_state("success")
 
