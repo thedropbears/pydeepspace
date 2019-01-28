@@ -1,32 +1,35 @@
 import wpilib
-import ctre
 
 
 class Hatch:
     top_puncher: wpilib.Solenoid
     left_puncher: wpilib.Solenoid
     right_puncher: wpilib.Solenoid
-    actuator_arm: ctre.TalonSRX
+
+    top_limit_switch: wpilib.DigitalInput
+    left_limit_switch: wpilib.DigitalInput
+    right_limit_switch: wpilib.DigitalInput
 
     def __init__(self):
-        self.puncher = False
-        self.retracter = True
-
-    def setup(self):
-        """This is called after variables are injected by magicbot."""
-
-    def on_enable(self):
-        """This is called whenever the robot transitions to being enabled."""
+        self.punch_on = False
 
     def execute(self):
         """Run at the end of every control loop iteration."""
+        self.top_puncher.set(self.punch_on)
+        self.left_puncher.set(self.punch_on)
+        self.right_puncher.set(self.punch_on)
 
     def punch(self):
-        self.top_puncher.set(True)
-        self.left_puncher.set(True)
-        self.right_puncher.set(True)
+        self.punch_on = True
 
     def retract(self):
-        self.top_puncher.set(False)
-        self.left_puncher.set(False)
-        self.right_puncher.set(False)
+        self.punch_on = False
+
+    def contained(self):
+        return any(
+            [
+                not self.top_limit_switch.get(),
+                not self.left_limit_switch.get(),
+                not self.right_limit_switch.get(),
+            ]
+        )
