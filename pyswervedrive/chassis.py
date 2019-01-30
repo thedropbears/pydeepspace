@@ -3,8 +3,7 @@ from typing import Tuple
 
 import numpy as np
 from magicbot import tunable
-from wpilib import PIDController
-from wpilib.interfaces import PIDOutput
+from wpilib_controller import PIDController
 
 from utilities.navx import NavX
 from .module import SwerveModule
@@ -37,19 +36,12 @@ class SwerveChassis:
 
     def setup(self):
         # Heading PID controller
-        self.heading_pid_out = ChassisPIDOutput()
         self.heading_pid = PIDController(
-            Kp=2.0,
-            Ki=0.0,
-            Kd=1.0,
-            source=self.imu.getAngle,
-            output=self.heading_pid_out,
-            period=1 / 50,
+            Kp=2.0, Ki=0.0, Kd=1.0, measurement_source=self.imu.getAngle, period=1 / 50
         )
         self.heading_pid.setInputRange(-math.pi, math.pi)
         self.heading_pid.setOutputRange(-2, 2)
         self.heading_pid.setContinuous()
-        self.heading_pid.enable()
         self.modules = [self.module_a, self.module_b, self.module_c, self.module_d]
 
         self.odometry_x = 0
@@ -101,8 +93,7 @@ class SwerveChassis:
         self.set_heading_sp(self.imu.getAngle())
 
     def set_heading_sp(self, setpoint):
-        self.heading_pid.setSetpoint(setpoint)
-        self.heading_pid.enable()
+        self.heading_pid.setReference(setpoint)
 
     def heading_hold_on(self):
         self.set_heading_sp_current()
@@ -110,7 +101,6 @@ class SwerveChassis:
         self.hold_heading = True
 
     def heading_hold_off(self):
-        self.heading_pid.disable()
         self.hold_heading = False
 
     def on_enable(self):
@@ -123,16 +113,16 @@ class SwerveChassis:
 
         pid_z = 0
         if self.hold_heading:
+            pid_z = self.heading_pid.update()
             if self.momentum and abs(self.imu.getHeadingRate()) < 0.005:
                 self.momentum = False
 
             if self.vz not in [0.0, None]:
                 self.momentum = True
 
-            if not self.momentum:
-                pid_z = self.heading_pid_out.output
-            else:
+            if self.momentum:
                 self.set_heading_sp_current()
+                pid_z = 0
 
         input_vz = 0
         if self.vz is not None:
@@ -286,8 +276,3 @@ class SwerveChassis:
     @property
     def all_aligned(self):
         return all(module.aligned for module in self.modules)
-
-
-class ChassisPIDOutput(PIDOutput):
-    def pidWrite(self, output):
-        self.output = output
