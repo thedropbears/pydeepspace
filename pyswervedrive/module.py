@@ -1,7 +1,9 @@
 import math
+
 import ctre
 import hal
 from networktables import NetworkTables
+
 from utilities.functions import constrain_angle
 
 
@@ -65,8 +67,7 @@ class SwerveModule:
         self.reverse_drive_encoder = reverse_drive_encoder
 
         self.aligned = False
-        self.vx = 0
-        self.vy = 0
+        self.last_speed = 0
 
         self.update_odometry()
 
@@ -89,7 +90,7 @@ class SwerveModule:
         self.steer_motor.config_kF(0, 0, 10)
         self.read_steer_pos()
 
-        self.steer_motor.setNeutralMode(ctre.WPI_TalonSRX.NeutralMode.Coast)
+        self.steer_motor.setNeutralMode(ctre.NeutralMode.Coast)
 
         self.drive_motor.configSelectedFeedbackSensor(
             ctre.FeedbackDevice.QuadEncoder, 0, 10
@@ -123,8 +124,8 @@ class SwerveModule:
     def read_steer_pos(self):
         sp = self.steer_motor.getSelectedSensorPosition(0)
         self.current_azimuth_sp = (
-            float(sp - self.steer_enc_offset) / self.STEER_COUNTS_PER_RADIAN
-        )
+            sp - self.steer_enc_offset
+        ) / self.STEER_COUNTS_PER_RADIAN
 
     def store_steer_offsets(self):
         """Store the current steer positions as the offsets."""
@@ -133,8 +134,8 @@ class SwerveModule:
         )
 
     def reset_encoder_delta(self):
-        """Re-zero the encoder deltas as returned from
-        get_encoder_delta.
+        """Re-zero the encoder deltas as returned from get_encoder_delta.
+
         This is intended to be called by the SwerveChassis in order to track
         odometry.
         """
@@ -188,21 +189,17 @@ class SwerveModule:
         :param vx: desired x velocity, m/s (x is forward on the robot)
         :param vy: desired y velocity, m/s (y is left on the robot)
         """
-
-        if math.hypot(vx, vy) == 0:
-            self.drive_motor.setIntegralAccumulator(0, 0, 0)
-            self.drive_motor.neutralOutput()
-            self.steer_motor.neutralOutput()
-
-        self.vx = vx
-        self.vy = vy
-
-        # calculate straight line velocity and angle of motion
-        velocity = math.hypot(self.vx, self.vy)
-        desired_azimuth = math.atan2(self.vy, self.vx)
-
-        if velocity == 0:
+        speed = math.hypot(vx, vy)
+        if speed == 0:
+            if self.last_speed != 0:
+                self.drive_motor.setIntegralAccumulator(0, 0, 0)
+                self.drive_motor.neutralOutput()
+                self.steer_motor.neutralOutput()
+                self.last_speed = 0
             return
+
+        self.last_speed = speed
+        desired_azimuth = math.atan2(vy, vx)
 
         if absolute_rotation:
             # Calculate a delta to from the module's current setpoint (wrapped
@@ -211,7 +208,7 @@ class SwerveModule:
             delta = constrain_angle(desired_azimuth - self.measured_azimuth)
         else:
             # figure out the most efficient way to get the module to the desired direction
-            # current_unwound_azimuth = constrain_angle(self.measured_azimuth)
+            # current_unwound_azimuth = self.measured_azimuth
             current_unwound_azimuth = constrain_angle(self.current_azimuth_sp)
             delta = self.min_angular_displacement(
                 current_unwound_azimuth, desired_azimuth
@@ -236,14 +233,14 @@ class SwerveModule:
                 # if we are nearing the correct angle with the module forwards
                 self.drive_motor.set(
                     ctre.ControlMode.Velocity,
-                    velocity * self.drive_velocity_to_native_units,
+                    speed * self.drive_velocity_to_native_units,
                 )
                 self.aligned = True
-            elif abs(azimuth_error) > math.pi - math.pi / 3.0:
+            elif abs(azimuth_error) > math.tau / 3.0:
                 # if we are nearing the correct angle with the module backwards
                 self.drive_motor.set(
                     ctre.ControlMode.Velocity,
-                    -velocity * self.drive_velocity_to_native_units,
+                    -speed * self.drive_velocity_to_native_units,
                 )
                 self.aligned = True
             else:
@@ -251,8 +248,7 @@ class SwerveModule:
                 self.aligned = False
         else:
             self.drive_motor.set(
-                ctre.ControlMode.Velocity,
-                velocity * self.drive_velocity_to_native_units,
+                ctre.ControlMode.Velocity, speed * self.drive_velocity_to_native_units
             )
 
     @property
@@ -266,17 +262,14 @@ class SwerveModule:
         self.wheel_angular_vel = drive_vel / self.drive_angular_vel_to_native_units
         steer_pos = self.steer_motor.getSelectedSensorPosition(0)
         self.measured_azimuth = constrain_angle(
-            float(steer_pos - self.steer_enc_offset) / self.STEER_COUNTS_PER_RADIAN
+            (steer_pos - self.steer_enc_offset) / self.STEER_COUNTS_PER_RADIAN
         )
         self.wheel_pos = drive_pos / self.drive_counts_per_metre
 
     @staticmethod
     def min_angular_displacement(current, target):
-        """Return the minimum (signed) angular displacement to get from :param current:
-        to :param target:. In radians."""
-        target = constrain_angle(target)
+        """Get the minimum (signed) angular displacement from `current` to `target` in radians."""
         opp_target = constrain_angle(target + math.pi)
-        current = constrain_angle(current)
         diff = constrain_angle(target - current)
         opp_diff = constrain_angle(opp_target - current)
 
