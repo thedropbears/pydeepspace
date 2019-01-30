@@ -64,7 +64,6 @@ class SwerveModule:
         self.reverse_drive_direction = reverse_drive_direction
         self.reverse_drive_encoder = reverse_drive_encoder
 
-        self.absolute_rotation = False
         self.aligned = False
         self.vx = 0
         self.vy = 0
@@ -120,14 +119,6 @@ class SwerveModule:
         self.drive_motor.configContinuousCurrentLimit(40, timeoutMs=10)
         self.drive_motor.enableCurrentLimit(True)
         self.drive_motor.enableVoltageCompensation(True)
-
-    def set_rotation_mode(self, rotation_mode):
-        """Set whether we want the modules to rotate to the nearest possible
-        direction to get to the required angle (and sometimes face backwards),
-        or to rotate fully forwards to the correct angle.
-        :param rotation_mode: False to rotate to nearest possible, True to
-        rotate forwards to the required angle."""
-        self.absolute_rotation = rotation_mode
 
     def read_steer_pos(self):
         sp = self.steer_motor.getSelectedSensorPosition(0)
@@ -190,9 +181,10 @@ class SwerveModule:
         drive_y_vel = drive_speed * math.sin(azimuth)
         return drive_x_vel, drive_y_vel
 
-    def set_velocity(self, vx, vy):
+    def set_velocity(self, vx: float, vy: float, *, absolute_rotation: bool = False):
         """Set the x and y components of the desired module velocity, relative
         to the robot.
+
         :param vx: desired x velocity, m/s (x is forward on the robot)
         :param vy: desired y velocity, m/s (y is left on the robot)
         """
@@ -212,7 +204,7 @@ class SwerveModule:
         if velocity == 0:
             return
 
-        if self.absolute_rotation:
+        if absolute_rotation:
             # Calculate a delta to from the module's current setpoint (wrapped
             # to between +-pi), representing required rotation to get to our
             # desired angle
@@ -237,7 +229,7 @@ class SwerveModule:
         self.steer_motor.set(ctre.ControlMode.Position, self.setpoint)
         self.current_azimuth_sp = azimuth_to_set
 
-        if not self.absolute_rotation:
+        if not absolute_rotation:
             # logic to only move the modules when we are close to the corret angle
             azimuth_error = constrain_angle(self.measured_azimuth - desired_azimuth)
             if abs(azimuth_error) < math.pi / 3.0:
