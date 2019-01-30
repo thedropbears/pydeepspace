@@ -19,49 +19,41 @@ class Robot(magicbot.MagicRobot):
     def createObjects(self):
         """Create motors and stuff here."""
 
-        # a + + b + - c - - d - +
+        # a + + b - + c - - d + -
         x_dist = 0.2165
         y_dist = 0.2625
-        self.module_a = SwerveModule(  # top right module now back left
+        self.module_a = SwerveModule(  # top left module
             "a",
             steer_talon=ctre.TalonSRX(1),
             drive_talon=ctre.TalonSRX(2),
             x_pos=x_dist,
             y_pos=y_dist,
-            reverse_steer_encoder=True,
-            reverse_drive_direction=True,
         )
-        self.module_b = SwerveModule(  # bottom left module now front right
+        self.module_b = SwerveModule(  # bottom left module
             "b",
             steer_talon=ctre.TalonSRX(3),
             drive_talon=ctre.TalonSRX(4),
             x_pos=-x_dist,
             y_pos=y_dist,
-            reverse_steer_encoder=True,
-            reverse_drive_direction=True,
         )
-        self.module_c = SwerveModule(  # top right module now back left
+        self.module_c = SwerveModule(  # bottom right module
             "c",
             steer_talon=ctre.TalonSRX(5),
             drive_talon=ctre.TalonSRX(6),
             x_pos=-x_dist,
             y_pos=-y_dist,
-            reverse_steer_encoder=True,
-            reverse_drive_direction=True,
         )
-        self.module_d = SwerveModule(  # bottom left module now front right
+        self.module_d = SwerveModule(  # front right module
             "d",
             steer_talon=ctre.TalonSRX(7),
             drive_talon=ctre.TalonSRX(8),
             x_pos=x_dist,
             y_pos=-y_dist,
-            reverse_steer_encoder=True,
-            reverse_drive_direction=True,
         )
         self.imu = NavX()
 
         self.sd = NetworkTables.getTable("SmartDashboard")
-        wpilib.SmartDashboard.putData("gyro", self.imu.ahrs)
+        wpilib.SmartDashboard.putData("Gyro", self.imu.ahrs)
 
         # boilerplate setup for the joystick
         self.joystick = wpilib.Joystick(0)
@@ -78,7 +70,7 @@ class Robot(magicbot.MagicRobot):
 
     def teleopPeriodic(self):
         """Allow the drivers to control the robot."""
-        self.chassis.heading_hold_off()
+        # self.chassis.heading_hold_off()
 
         throttle = (1 - self.joystick.getThrottle()) / 2
         self.sd.putNumber("joy_throttle", throttle)
@@ -120,7 +112,6 @@ class Robot(magicbot.MagicRobot):
     def robotPeriodic(self):
         super().robotPeriodic()
 
-        self.sd.putNumber("imu_heading", self.imu.getAngle())
         self.sd.putNumber("odometry_x", self.chassis.position[0])
         self.sd.putNumber("odometry_y", self.chassis.position[1])
         for module in self.chassis.modules:
