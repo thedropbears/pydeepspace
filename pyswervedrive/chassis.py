@@ -5,8 +5,8 @@ from magicbot import tunable
 from wpilib import PIDController
 from wpilib.interfaces import PIDOutput
 
-from pyswervedrive.swervemodule import SwerveModule
 from utilities.navx import NavX
+from .module import SwerveModule
 
 
 class SwerveChassis:

@@ -3,7 +3,7 @@ import math
 import ctre
 import numpy as np
 
-from pyswervedrive.swervemodule import SwerveModule
+from pyswervedrive.module import SwerveModule
 from utilities.functions import constrain_angle
 
 
