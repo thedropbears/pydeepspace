@@ -13,7 +13,14 @@ from utilities.navx import NavX
 
 
 class Robot(magicbot.MagicRobot):
+    # Declare magicbot components here using variable annotations.
+    # NOTE: ORDER IS IMPORTANT.
+    # Any components that actuate objects should be declared after
+    # any higher-level components (automations) that depend on them.
 
+    # Automations
+
+    # Actuators
     chassis: SwerveChassis
 
     def createObjects(self):
