@@ -290,9 +290,3 @@ class SwerveChassis:
 class ChassisPIDOutput(PIDOutput):
     def pidWrite(self, output):
         self.output = output
-
-    def reset_odometry(self):
-        """Reset all 3 odometry variables to a value of 0."""
-        self.odometry_x = 0
-        self.odometry_y = 0
-        self.odometry_theta = 0
