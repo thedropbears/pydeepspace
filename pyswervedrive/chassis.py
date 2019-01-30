@@ -1,4 +1,5 @@
 import math
+from typing import Tuple
 
 import numpy as np
 from magicbot import tunable
@@ -237,37 +238,41 @@ class SwerveChassis:
         self.field_oriented = field_oriented
 
     @staticmethod
-    def robot_orient(vx, vy, heading):
+    def robot_orient(vx: float, vy: float, heading: float) -> Tuple[float, float]:
         """Turn a vx and vy relative to the field into a vx and vy based on the
         robot.
 
         Args:
             vx: vx to robot orient
             vy: vy to robot orient
-            heading: current heading of the robot. In radians CCW from +x axis.
+            heading: current heading of the robot in radians CCW from +x axis.
+
         Returns:
-            float: robot oriented vx speed
-            float: robot oriented vy speed
+            tuple of robot oriented vx and vy
         """
-        oriented_vx = vx * math.cos(heading) + vy * math.sin(heading)
-        oriented_vy = -vx * math.sin(heading) + vy * math.cos(heading)
+        c_h = math.cos(heading)
+        s_h = math.sin(heading)
+        oriented_vx = vx * c_h + vy * s_h
+        oriented_vy = -vx * s_h + vy * c_h
         return oriented_vx, oriented_vy
 
     @staticmethod
-    def field_orient(vx, vy, heading):
+    def field_orient(vx: float, vy: float, heading: float) -> Tuple[float, float]:
         """Turn a vx and vy relative to the robot into a vx and vy based on the
         field.
 
         Args:
             vx: vx to field orient
             vy: vy to field orient
-            heading: current heading of the robot. In radians CCW from +x axis.
+            heading: current heading of the robot in radians CCW from +x axis.
+
         Returns:
-            float: field oriented vx speed
-            float: field oriented vy speed
+            tuple of field oriented vx and vy
         """
-        oriented_vx = vx * math.cos(heading) - vy * math.sin(heading)
-        oriented_vy = vx * math.sin(heading) + vy * math.cos(heading)
+        c_h = math.cos(heading)
+        s_h = math.sin(heading)
+        oriented_vx = vx * c_h - vy * s_h
+        oriented_vy = vx * s_h + vy * c_h
         return oriented_vx, oriented_vy
 
     @property
