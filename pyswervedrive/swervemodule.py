@@ -7,6 +7,7 @@ from utilities.functions import constrain_angle
 
 class SwerveModule:
 
+    DRIVE_FREE_SPEED: float = 94000.0  # encoder ticks / 100 ms
     # TODO: change back for real robot
     SRX_MAG_COUNTS_PER_REV: int = 4096
     WHEEL_DIAMETER: float = 0.0254 * 3
@@ -35,7 +36,6 @@ class SwerveModule:
         drive_talon: ctre.TalonSRX,
         x_pos: float,
         y_pos: float,
-        drive_free_speed: float,
         reverse_steer_direction: bool = False,
         reverse_steer_encoder: bool = False,
         reverse_drive_direction: bool = False,
@@ -63,7 +63,6 @@ class SwerveModule:
         self.reverse_steer_encoder = reverse_steer_encoder
         self.reverse_drive_direction = reverse_drive_direction
         self.reverse_drive_encoder = reverse_drive_encoder
-        self.drive_free_speed = drive_free_speed
 
         self.absolute_rotation = False
         self.aligned = False
@@ -104,7 +103,7 @@ class SwerveModule:
         self.drive_motor.config_kP(0, 0.1, 10)  # 0.5, 0.002, 0,
         self.drive_motor.config_kI(0, 0, 10)
         self.drive_motor.config_kD(0, 0, 10)
-        self.drive_motor.config_kF(0, 1024.0 / self.drive_free_speed, 10)
+        self.drive_motor.config_kF(0, 1024.0 / self.DRIVE_FREE_SPEED, 10)
         self.drive_motor.configClosedLoopRamp(0.3, 10)
         self.drive_motor.selectProfileSlot(0, 0)
 

@@ -13,9 +13,7 @@ from utilities.navx import NavX
 
 
 class Robot(magicbot.MagicRobot):
-    module_drive_free_speed: float = 94000.0  # encoder ticks / 100 ms
-    #  TODO do the maths to verify that this is correct
-    offset_rotation_rate = 40
+
     chassis: SwerveChassis
 
     def createObjects(self):
@@ -30,7 +28,6 @@ class Robot(magicbot.MagicRobot):
             drive_talon=ctre.TalonSRX(2),
             x_pos=x_dist,
             y_pos=y_dist,
-            drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
             reverse_drive_direction=True,
         )
@@ -40,9 +37,8 @@ class Robot(magicbot.MagicRobot):
             drive_talon=ctre.TalonSRX(4),
             x_pos=-x_dist,
             y_pos=y_dist,
-            drive_free_speed=Robot.module_drive_free_speed,
-            reverse_drive_encoder=True,
             reverse_steer_encoder=True,
+            reverse_drive_direction=True,
         )
         self.module_c = SwerveModule(  # top right module now back left
             "c",
@@ -50,7 +46,6 @@ class Robot(magicbot.MagicRobot):
             drive_talon=ctre.TalonSRX(6),
             x_pos=-x_dist,
             y_pos=-y_dist,
-            drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
             reverse_drive_direction=True,
         )
@@ -60,7 +55,6 @@ class Robot(magicbot.MagicRobot):
             drive_talon=ctre.TalonSRX(8),
             x_pos=x_dist,
             y_pos=-y_dist,
-            drive_free_speed=Robot.module_drive_free_speed,
             reverse_steer_encoder=True,
             reverse_drive_direction=True,
         )
