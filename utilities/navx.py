@@ -8,7 +8,6 @@ class NavX:
 
     def __init__(self):
         self.ahrs = navx.AHRS.create_spi(update_rate_hz=50)
-        self.pidsource = self.PIDSourceType.kDisplacement
 
     def getAngle(self) -> float:
         """Get the current yaw in radians.
