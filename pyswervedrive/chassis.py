@@ -1,9 +1,9 @@
 import math
+from typing import Tuple
 
 import numpy as np
 from magicbot import tunable
-from wpilib import PIDController
-from wpilib.interfaces import PIDOutput
+from wpilib_controller import PIDController
 
 from utilities.navx import NavX
 from .module import SwerveModule
@@ -22,7 +22,6 @@ class SwerveChassis:
     # tunables here purely for debugging
     odometry_x = tunable(0)
     odometry_y = tunable(0)
-    # odometry_theta = tunable(0)
     # odometry_x_vel = tunable(0)
     # odometry_y_vel = tunable(0)
     # odometry_z_vel = tunable(0)
@@ -31,31 +30,22 @@ class SwerveChassis:
         self.vx = 0
         self.vy = 0
         self.vz = 0
-        self.last_vx, self.last_vy = self.vx, self.vy
         self.field_oriented = False
         self.hold_heading = False
         self.momentum = False
 
     def setup(self):
         # Heading PID controller
-        self.heading_pid_out = ChassisPIDOutput()
         self.heading_pid = PIDController(
-            Kp=2.0,
-            Ki=0.0,
-            Kd=1.0,
-            source=self.imu.getAngle,
-            output=self.heading_pid_out,
-            period=1 / 50,
+            Kp=2.0, Ki=0.0, Kd=1.0, measurement_source=self.imu.getAngle, period=1 / 50
         )
         self.heading_pid.setInputRange(-math.pi, math.pi)
         self.heading_pid.setOutputRange(-2, 2)
         self.heading_pid.setContinuous()
-        self.heading_pid.enable()
         self.modules = [self.module_a, self.module_b, self.module_c, self.module_d]
 
         self.odometry_x = 0
         self.odometry_y = 0
-        self.odometry_theta = 0
         self.odometry_x_vel = 0
         self.odometry_y_vel = 0
         self.odometry_z_vel = 0
@@ -103,8 +93,7 @@ class SwerveChassis:
         self.set_heading_sp(self.imu.getAngle())
 
     def set_heading_sp(self, setpoint):
-        self.heading_pid.setSetpoint(setpoint)
-        self.heading_pid.enable()
+        self.heading_pid.setReference(setpoint)
 
     def heading_hold_on(self):
         self.set_heading_sp_current()
@@ -112,7 +101,6 @@ class SwerveChassis:
         self.hold_heading = True
 
     def heading_hold_off(self):
-        self.heading_pid.disable()
         self.hold_heading = False
 
     def on_enable(self):
@@ -125,16 +113,16 @@ class SwerveChassis:
 
         pid_z = 0
         if self.hold_heading:
+            pid_z = self.heading_pid.update()
             if self.momentum and abs(self.imu.getHeadingRate()) < 0.005:
                 self.momentum = False
 
             if self.vz not in [0.0, None]:
                 self.momentum = True
 
-            if not self.momentum:
-                pid_z = self.heading_pid_out.output
-            else:
+            if self.momentum:
                 self.set_heading_sp_current()
+                pid_z = 0
 
         input_vz = 0
         if self.vz is not None:
@@ -234,44 +222,47 @@ class SwerveChassis:
                 desired [angular] velocity. In radians/s.
             field_oriented: Whether the inputs are field or robot oriented.
         """
-        self.last_vx, self.last_vy = self.vx, self.vy
         self.vx = vx
         self.vy = vy
         self.vz = vz
         self.field_oriented = field_oriented
 
     @staticmethod
-    def robot_orient(vx, vy, heading):
+    def robot_orient(vx: float, vy: float, heading: float) -> Tuple[float, float]:
         """Turn a vx and vy relative to the field into a vx and vy based on the
         robot.
 
         Args:
             vx: vx to robot orient
             vy: vy to robot orient
-            heading: current heading of the robot. In radians CCW from +x axis.
+            heading: current heading of the robot in radians CCW from +x axis.
+
         Returns:
-            float: robot oriented vx speed
-            float: robot oriented vy speed
+            tuple of robot oriented vx and vy
         """
-        oriented_vx = vx * math.cos(heading) + vy * math.sin(heading)
-        oriented_vy = -vx * math.sin(heading) + vy * math.cos(heading)
+        c_h = math.cos(heading)
+        s_h = math.sin(heading)
+        oriented_vx = vx * c_h + vy * s_h
+        oriented_vy = -vx * s_h + vy * c_h
         return oriented_vx, oriented_vy
 
     @staticmethod
-    def field_orient(vx, vy, heading):
+    def field_orient(vx: float, vy: float, heading: float) -> Tuple[float, float]:
         """Turn a vx and vy relative to the robot into a vx and vy based on the
         field.
 
         Args:
             vx: vx to field orient
             vy: vy to field orient
-            heading: current heading of the robot. In radians CCW from +x axis.
+            heading: current heading of the robot in radians CCW from +x axis.
+
         Returns:
-            float: field oriented vx speed
-            float: field oriented vy speed
+            tuple of field oriented vx and vy
         """
-        oriented_vx = vx * math.cos(heading) - vy * math.sin(heading)
-        oriented_vy = vx * math.sin(heading) + vy * math.cos(heading)
+        c_h = math.cos(heading)
+        s_h = math.sin(heading)
+        oriented_vx = vx * c_h - vy * s_h
+        oriented_vy = vx * s_h + vy * c_h
         return oriented_vx, oriented_vy
 
     @property
@@ -285,14 +276,3 @@ class SwerveChassis:
     @property
     def all_aligned(self):
         return all(module.aligned for module in self.modules)
-
-
-class ChassisPIDOutput(PIDOutput):
-    def pidWrite(self, output):
-        self.output = output
-
-    def reset_odometry(self):
-        """Reset all 3 odometry variables to a value of 0."""
-        self.odometry_x = 0
-        self.odometry_y = 0
-        self.odometry_theta = 0
