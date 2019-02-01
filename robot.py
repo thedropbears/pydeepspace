@@ -8,15 +8,17 @@ import magicbot
 import wpilib
 from networktables import NetworkTables
 
-from automations.hatch import HatchController
 from automations.alignment import Aligner
+from automations.cargo import CargoManager
+from automations.hatch import HatchController
+from components.cargo import Arm, Intake
 from components.hatch import Hatch
 from automations.climb import ClimbAutomation
 from components.vision import Vision
 from components.climb import Lift, LiftDrive
 from pyswervedrive.chassis import SwerveChassis
 from pyswervedrive.module import SwerveModule
-from utilities.functions import rescale_js, constrain_angle
+from utilities.functions import constrain_angle, rescale_js
 from utilities.navx import NavX
 
 
@@ -27,13 +29,16 @@ class Robot(magicbot.MagicRobot):
     # any higher-level components (automations) that depend on them.
 
     # Automations
+    cargo: CargoManager
     hatchman: HatchController
     align: Aligner
     climb_automation: ClimbAutomation
 
     # Actuators
+    arm: Arm
     chassis: SwerveChassis
     hatch: Hatch
+    intake: Intake
 
     front_lift: Lift
     back_lift: Lift
@@ -94,6 +99,10 @@ class Robot(magicbot.MagicRobot):
         self.back_lift_limit_switch = wpilib.DigitalInput(5)
 
         self.lift_drive_motor = ctre.TalonSRX(20)
+
+        # cargo related objects
+        self.intake_motor = ctre.TalonSRX(9)
+        self.intake_switch = wpilib.DigitalInput(0)
 
         # boilerplate setup for the joystick
         self.joystick = wpilib.Joystick(0)
