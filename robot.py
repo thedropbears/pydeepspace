@@ -86,7 +86,7 @@ class Robot(magicbot.MagicRobot):
 
         # cargo related objects
         self.intake_motor = ctre.TalonSRX(9)
-        self.switch = wpilib.DigitalInput(0)
+        self.intake_switch = wpilib.DigitalInput(0)
 
         # boilerplate setup for the joystick
         self.joystick = wpilib.Joystick(0)

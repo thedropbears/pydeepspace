@@ -11,6 +11,7 @@ class CargoManager(StateMachine):
     align: Aligner
 
     def __init__(self):
+        super().__init__()
         self.override = False
 
     def intake_floor(self, force=False):
