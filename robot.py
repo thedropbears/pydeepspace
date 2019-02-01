@@ -2,6 +2,8 @@
 import math
 
 import ctre
+
+# import rev
 import magicbot
 import wpilib
 from networktables import NetworkTables
@@ -9,7 +11,9 @@ from networktables import NetworkTables
 from automations.hatch import HatchController
 from automations.alignment import Aligner
 from components.hatch import Hatch
+from automations.climb import ClimbAutomation
 from components.vision import Vision
+from components.climb import Lift, LiftDrive
 from pyswervedrive.chassis import SwerveChassis
 from pyswervedrive.module import SwerveModule
 from utilities.functions import rescale_js, constrain_angle
@@ -25,10 +29,15 @@ class Robot(magicbot.MagicRobot):
     # Automations
     hatchman: HatchController
     align: Aligner
+    climb_automation: ClimbAutomation
 
     # Actuators
     chassis: SwerveChassis
     hatch: Hatch
+
+    front_lift: Lift
+    back_lift: Lift
+    lift_drive: LiftDrive
 
     def createObjects(self):
         """Create motors and stuff here."""
@@ -78,6 +87,13 @@ class Robot(magicbot.MagicRobot):
         self.hatch_top_limit_switch = wpilib.DigitalInput(1)
         self.hatch_left_limit_switch = wpilib.DigitalInput(2)
         self.hatch_right_limit_switch = wpilib.DigitalInput(3)
+        # self.front_lift_motor = rev.CANSparkMax(0, rev.MotorType.kBrushless)
+        self.front_lift_limit_switch = wpilib.DigitalInput(4)
+
+        # self.back_lift_motor = rev.CANSparkMax(1, rev.MotorType.kBrushless)
+        self.back_lift_limit_switch = wpilib.DigitalInput(5)
+
+        self.lift_drive_motor = ctre.TalonSRX(20)
 
         # boilerplate setup for the joystick
         self.joystick = wpilib.Joystick(0)
