@@ -1,3 +1,5 @@
+import enum
+
 import ctre
 import wpilib
 
@@ -26,9 +28,13 @@ class Intake:
         return self.switch.get()
 
 
+class Heights(enum.Enum):
+    pass
+
+
 class Arm:
     def execute(self):
         pass
 
-    def move_to(self):
+    def move_to(self, height: Heights):
         pass
