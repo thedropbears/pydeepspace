@@ -10,6 +10,8 @@ from automations.hatch import HatchController
 from automations.alignment import Aligner
 from components.hatch import Hatch
 from components.vision import Vision
+from components.cargo import Arm
+from components.cargo import Intake
 from pyswervedrive.chassis import SwerveChassis
 from pyswervedrive.module import SwerveModule
 from utilities.functions import rescale_js, constrain_angle
@@ -27,8 +29,10 @@ class Robot(magicbot.MagicRobot):
     align: Aligner
 
     # Actuators
+    arm: Arm
     chassis: SwerveChassis
     hatch: Hatch
+    intake: Intake
 
     def createObjects(self):
         """Create motors and stuff here."""
@@ -78,6 +82,10 @@ class Robot(magicbot.MagicRobot):
         self.hatch_top_limit_switch = wpilib.DigitalInput(1)
         self.hatch_left_limit_switch = wpilib.DigitalInput(2)
         self.hatch_right_limit_switch = wpilib.DigitalInput(3)
+
+        # cargo related objects
+        self.intake_motor = ctre.TalonSRX(9)
+        self.switch = wpilib.DigitalInput(0)
 
         # boilerplate setup for the joystick
         self.joystick = wpilib.Joystick(0)

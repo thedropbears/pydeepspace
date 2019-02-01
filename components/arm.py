@@ -1,2 +1,0 @@
-class Arm:
-    pass

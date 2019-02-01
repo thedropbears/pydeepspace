@@ -8,13 +8,10 @@ class Intake:
     switch: wpilib.DigitalInput
 
     def __init__(self):
-        self.last_motor_output = None
         self.motor_output = 0
 
     def execute(self):
-        if self.motor_output != self.last_motor_output:
-            self.motor.set(ctre.ControlMode.PercentOutput, self.motor_output)
-            self.last_motor_output = self.motor_output
+        self.motor.set(ctre.ControlMode.PercentOutput, self.motor_output)
 
     def intake(self):
         self.motor_output = -1
@@ -25,5 +22,13 @@ class Intake:
     def stop(self):
         self.motor_output = 0
 
-    def contained(self):
+    def is_contained(self):
         return self.switch.get()
+
+
+class Arm:
+    def execute(self):
+        pass
+
+    def move_to(self):
+        pass
