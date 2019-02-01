@@ -6,7 +6,9 @@ import magicbot
 import wpilib
 from networktables import NetworkTables
 
+from automations.hatch import HatchController
 from automations.alignment import Aligner
+from components.hatch import Hatch
 from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
 from pyswervedrive.module import SwerveModule
@@ -21,10 +23,12 @@ class Robot(magicbot.MagicRobot):
     # any higher-level components (automations) that depend on them.
 
     # Automations
+    hatchman: HatchController
     align: Aligner
 
     # Actuators
     chassis: SwerveChassis
+    hatch: Hatch
 
     def createObjects(self):
         """Create motors and stuff here."""
@@ -65,6 +69,15 @@ class Robot(magicbot.MagicRobot):
 
         self.sd = NetworkTables.getTable("SmartDashboard")
         wpilib.SmartDashboard.putData("Gyro", self.imu.ahrs)
+
+        # hatch objects
+        self.hatch_top_puncher = wpilib.Solenoid(0)
+        self.hatch_left_puncher = wpilib.Solenoid(1)
+        self.hatch_right_puncher = wpilib.Solenoid(2)
+
+        self.hatch_top_limit_switch = wpilib.DigitalInput(1)
+        self.hatch_left_limit_switch = wpilib.DigitalInput(2)
+        self.hatch_right_limit_switch = wpilib.DigitalInput(3)
 
         # boilerplate setup for the joystick
         self.joystick = wpilib.Joystick(0)
