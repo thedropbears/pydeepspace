@@ -28,13 +28,16 @@ class Intake:
         return self.switch.get()
 
 
-class Heights(enum.Enum):
-    pass
+class Height(enum.Enum):
+    FLOOR = 0
+    ROCKET_SHIP = 42
+    CARGO_SHIP = 42
+    LOADING_STATION = 42
 
 
 class Arm:
     def execute(self):
         pass
 
-    def move_to(self, height: Heights):
+    def move_to(self, height: Height):
         pass

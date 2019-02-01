@@ -9,9 +9,9 @@ from networktables import NetworkTables
 from automations.hatch import HatchController
 from automations.alignment import Aligner
 from components.hatch import Hatch
+from automations.cargo import CargoManager
 from components.vision import Vision
-from components.cargo import Arm
-from components.cargo import Intake
+from components.cargo import Arm, Intake
 from pyswervedrive.chassis import SwerveChassis
 from pyswervedrive.module import SwerveModule
 from utilities.functions import rescale_js, constrain_angle
@@ -25,6 +25,7 @@ class Robot(magicbot.MagicRobot):
     # any higher-level components (automations) that depend on them.
 
     # Automations
+    cargo: CargoManager
     hatchman: HatchController
     align: Aligner
 

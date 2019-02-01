@@ -1,8 +1,7 @@
 from magicbot import state, StateMachine
 
-from automations.align import Aligner
-from components.arm import Arm
-from components.intake import Intake
+from automations.alignment import Aligner
+from components.cargo import Arm, Intake
 
 
 class CargoManager(StateMachine):
