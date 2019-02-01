@@ -6,6 +6,7 @@ import magicbot
 import wpilib
 from networktables import NetworkTables
 
+from automations.alignment import Aligner
 from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
 from pyswervedrive.module import SwerveModule
@@ -20,6 +21,7 @@ class Robot(magicbot.MagicRobot):
     # any higher-level components (automations) that depend on them.
 
     # Automations
+    align: Aligner
 
     # Actuators
     chassis: SwerveChassis
