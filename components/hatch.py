@@ -12,15 +12,19 @@ class Hatch:
 
     def __init__(self):
         self.punch_on = False
+        self.has_hatch = True
 
     def execute(self):
         """Run at the end of every control loop iteration."""
         self.top_puncher.set(self.punch_on)
         self.left_puncher.set(self.punch_on)
         self.right_puncher.set(self.punch_on)
+        if self.is_contained():
+            self.has_hatch = True
 
     def punch(self):
         self.punch_on = True
+        self.has_hatch = False
 
     def retract(self):
         self.punch_on = False
