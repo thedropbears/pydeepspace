@@ -16,18 +16,20 @@ def reflect_2d_y(v: tuple) -> tuple:
     return (v[0], -v[1])
 
 
-class LeftStartAuto(AutonomousStateMachine):
+class AutoBase(AutonomousStateMachine):
     MODE_NAME = "LEFT_START_AUTO"
     DEFAULT = False
 
     imu: NavX
     align: Aligner
     chassis: SwerveChassis
-    pursuit: PurePursuit
     vision: Vision
     hatchman: HatchController
 
     hatch: Hatch
+
+    # This one is just a typehint
+    pursuit: PurePursuit
 
     def __init__(self):
         super().__init__()
@@ -183,9 +185,8 @@ class LeftStartAuto(AutonomousStateMachine):
             return False
 
 
-class RightStartAuto(LeftStartAuto):
-    MODE_NAME = "RIGHT_START_AUTO"
-    DEFAULT = False
+class RightStartAuto(AutoBase):
+    MODE_NAME = "Right start autonomous"
 
     def __init__(self):
         super().__init__()
@@ -200,3 +201,7 @@ class RightStartAuto(LeftStartAuto):
         self.loading_bay = reflect_2d_y(self.loading_bay)
         self.side_cargo_bay = reflect_2d_y(self.side_cargo_bay)
         self.cross_point = reflect_2d_y(self.cross_point)
+
+
+class LeftStartAuto(AutoBase):
+    MODE_NAME = "Left start autonomous"
