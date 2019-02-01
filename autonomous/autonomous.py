@@ -17,16 +17,15 @@ def reflect_2d_y(v: tuple) -> tuple:
 
 
 class AutoBase(AutonomousStateMachine):
-    MODE_NAME = "LEFT_START_AUTO"
     DEFAULT = False
 
-    imu: NavX
+    # Here magicbot injects components
     align: Aligner
     chassis: SwerveChassis
-    vision: Vision
-    hatchman: HatchController
-
     hatch: Hatch
+    hatchman: HatchController
+    imu: NavX
+    vision: Vision
 
     # This one is just a typehint
     pursuit: PurePursuit
