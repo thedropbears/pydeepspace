@@ -25,7 +25,7 @@ class Hatch:
     def retract(self):
         self.punch_on = False
 
-    def contained(self):
+    def is_contained(self):
         return any(
             [
                 not self.top_limit_switch.get(),
