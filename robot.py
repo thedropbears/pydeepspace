@@ -6,15 +6,15 @@ import magicbot
 import wpilib
 from networktables import NetworkTables
 
-from automations.hatch import HatchController
 from automations.alignment import Aligner
-from components.hatch import Hatch
 from automations.cargo import CargoManager
-from components.vision import Vision
+from automations.hatch import HatchController
 from components.cargo import Arm, Intake
+from components.hatch import Hatch
+from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
 from pyswervedrive.module import SwerveModule
-from utilities.functions import rescale_js, constrain_angle
+from utilities.functions import constrain_angle, rescale_js
 from utilities.navx import NavX
 
 

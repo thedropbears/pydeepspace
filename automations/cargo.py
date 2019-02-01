@@ -1,4 +1,4 @@
-from magicbot import state, StateMachine
+from magicbot import StateMachine, state
 
 from automations.alignment import Aligner
 from components.cargo import Arm, Intake
