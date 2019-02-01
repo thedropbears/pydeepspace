@@ -18,7 +18,7 @@ def reflect_2d_y(v: tuple) -> tuple:
 
 class LeftStartAuto(AutonomousStateMachine):
     MODE_NAME = "LEFT_START_AUTO"
-    DEFAULT = True
+    DEFAULT = False
 
     imu: NavX
     align: Aligner
@@ -200,6 +200,3 @@ class RightStartAuto(LeftStartAuto):
         self.loading_bay = reflect_2d_y(self.loading_bay)
         self.side_cargo_bay = reflect_2d_y(self.side_cargo_bay)
         self.cross_point = reflect_2d_y(self.cross_point)
-
-
-self.start_pos = reflect_2d_y(self.start_pos)
