@@ -25,8 +25,5 @@ class Intake:
     def stop(self):
         self.motor_output = 0
 
-    def emergency_stop(self):
-        self.motor.stopMotor()
-
     def contained(self):
         return self.switch.get()
