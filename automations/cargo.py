@@ -19,8 +19,6 @@ class CargoManager(StateMachine):
 
     @state(first=True, must_finish=True)
     def move_to_floor(self):
-        self.arm.lower_helper_piston()
-        self.arm.lower_main_piston()
         self.next_state("intaking_cargo")
 
     def intake_depot(self, force=False):
@@ -28,8 +26,6 @@ class CargoManager(StateMachine):
 
     @state
     def move_to_depot(self):
-        self.arm.lower_main_piston()
-        self.arm.lower_helper_piston()
         self.next_state("intaking_cargo")
 
     def intake_loading(self, force=False):
@@ -37,16 +33,12 @@ class CargoManager(StateMachine):
 
     @state
     def move_to_loading_station(self):
-        self.arm.raise_helper_piston()
-        self.arm.raise_main_piston()
         self.next_state("intaking_cargo")
 
     @state(must_finish=True)
     def intaking_cargo(self):
         if self.intake.contained():
             self.intake.stop()
-            self.arm.raise_main_piston()
-            self.arm.lower_helper_piston()
             self.done()
         else:
             self.intake.intake()
