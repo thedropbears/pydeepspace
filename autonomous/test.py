@@ -14,7 +14,6 @@ class TestPursuitAuto(AutonomousStateMachine):
     pursuit: PurePursuit
     imu: NavX
 
-
     def __init__(self):
         super().__init__()
         self.points = ((0, 0, 1), (0.8, 0, 0.5), (1, 0, 0.2))
