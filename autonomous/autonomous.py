@@ -112,7 +112,7 @@ class AutoBase(AutonomousStateMachine):
         if initial_call:
             self.hatchman.engage()
             self.chassis.set_inputs(0, 0, 0)
-        if not self.hatchman.is_executing:
+        if not self.hatch.has_hatch:
             self.next_state("drive_to_loading_bay")
 
     @state
@@ -154,7 +154,7 @@ class AutoBase(AutonomousStateMachine):
         self.align.engage()
         if initial_call:
             self.chassis.set_inputs(0, 0, 0)
-        if self.align.is_executing:
+        if self.hatch.has_hatch:
             self.next_state("drive_to_loading_bay")
 
     @state
