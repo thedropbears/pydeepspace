@@ -44,6 +44,8 @@ class Robot(magicbot.MagicRobot):
     back_lift: Lift
     lift_drive: LiftDrive
 
+    offset_rotation_rate = 20
+
     def createObjects(self):
         """Create motors and stuff here."""
 
@@ -63,6 +65,8 @@ class Robot(magicbot.MagicRobot):
             drive_talon=ctre.TalonSRX(4),
             x_pos=-x_dist,
             y_pos=y_dist,
+            reverse_drive_direction=False,
+            reverse_drive_encoder=True
         )
         self.module_c = SwerveModule(  # bottom right module
             "c",
@@ -85,7 +89,7 @@ class Robot(magicbot.MagicRobot):
         wpilib.SmartDashboard.putData("Gyro", self.imu.ahrs)
 
         # hatch objects
-        self.hatch_top_puncher = wpilib.Solenoid(0)
+        self.hatch_bottom_puncher = wpilib.Solenoid(0)
         self.hatch_left_puncher = wpilib.Solenoid(1)
         self.hatch_right_puncher = wpilib.Solenoid(2)
 
@@ -157,6 +161,12 @@ class Robot(magicbot.MagicRobot):
         if joystick_hat != -1:
             constrained_angle = -constrain_angle(math.radians(joystick_hat))
             self.chassis.set_heading_sp(constrained_angle)
+        
+        if self.joystick.getRawButtonPressed(4):
+            self.hatch.punch()
+        
+        if self.joystick.getRawButtonPressed(5):
+            self.hatch.clear_to_retract = True
 
     def robotPeriodic(self):
         super().robotPeriodic()
@@ -173,9 +183,93 @@ class Robot(magicbot.MagicRobot):
                 module.drive_motor.getSelectedSensorPosition(0),
             )
             self.sd.putNumber(
-                module.name + "_drive_motor_output",
-                module.drive_motor.getMotorOutputPercent(),
+                module.name + "_drive_motor_reading",
+                module.drive_motor.getSelectedSensorVelocity(0) * 10 / module.drive_counts_per_metre,
             )
+    
+    def testPeriodic(self):
+        joystick_vx = -rescale_js(
+            self.joystick.getY(), deadzone=0.1, exponential=1.5, rate=0.5
+        )
+        self.sd.putNumber("joy_vx", joystick_vx)
+
+        if self.joystick.getRawButton(5):
+            self.module_a.store_steer_offsets()
+            self.module_a.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+            if self.joystick.getTriggerPressed():
+                self.module_a.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_a.steer_motor.getSelectedSensorPosition(0)
+                    + self.offset_rotation_rate,
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_a.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_a.steer_motor.getSelectedSensorPosition(0)
+                    - self.offset_rotation_rate,
+                )
+
+        if self.joystick.getRawButton(3):
+            self.module_b.store_steer_offsets()
+            self.module_b.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+            if self.joystick.getTriggerPressed():
+                self.module_b.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_b.steer_motor.getSelectedSensorPosition(0)
+                    + self.offset_rotation_rate,
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_b.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_b.steer_motor.getSelectedSensorPosition(0)
+                    - self.offset_rotation_rate,
+                )
+
+        if self.joystick.getRawButton(4):
+            self.module_c.store_steer_offsets()
+            self.module_c.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+            if self.joystick.getTriggerPressed():
+                self.module_c.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_c.steer_motor.getSelectedSensorPosition(0)
+                    + self.offset_rotation_rate,
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_c.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_c.steer_motor.getSelectedSensorPosition(0)
+                    - self.offset_rotation_rate,
+                )
+
+        if self.joystick.getRawButton(6):
+            self.module_d.store_steer_offsets()
+            self.module_d.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_vx)
+            if self.joystick.getTriggerPressed():
+                self.module_d.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_d.steer_motor.getSelectedSensorPosition(0)
+                    + self.offset_rotation_rate,
+                )
+            if self.joystick.getRawButtonPressed(2):
+                self.module_d.steer_motor.set(
+                    ctre.ControlMode.Position,
+                    self.module_d.steer_motor.getSelectedSensorPosition(0)
+                    - self.offset_rotation_rate,
+                )
+
+        if self.joystick.getRawButtonPressed(8):
+            for module in self.chassis.modules:
+                module.drive_motor.set(ctre.ControlMode.PercentOutput, 0.3)
+
+        if self.joystick.getRawButtonPressed(12):
+            for module in self.chassis.modules:
+                module.steer_motor.set(
+                    ctre.ControlMode.Position, module.steer_enc_offset
+                )
+        
+        if self.joystick.getRawButton(11):
+            for module in self.chassis.modules:
+                module.drive_motor.set(ctre.ControlMode.PercentOutput, 0.3)
 
 
 if __name__ == "__main__":
