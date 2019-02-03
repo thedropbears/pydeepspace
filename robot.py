@@ -8,9 +8,8 @@ import magicbot
 import wpilib
 from networktables import NetworkTables
 
-from automations.alignment import Aligner
+from automations.alignment import HatchDepositAligner, HatchIntakeAligner, CargoDepositAligner
 from automations.cargo import CargoManager
-from automations.hatch import HatchController
 from components.cargo import Arm, Intake
 from components.hatch import Hatch
 from automations.climb import ClimbAutomation
@@ -30,9 +29,10 @@ class Robot(magicbot.MagicRobot):
 
     # Automations
     cargo: CargoManager
-    hatchman: HatchController
-    align: Aligner
+    cargo_deposit: CargoDepositAligner
     climb_automation: ClimbAutomation
+    hatch_deposit: HatchDepositAligner
+    hatch_intake: HatchIntakeAligner
 
     # Actuators
     arm: Arm
@@ -50,35 +50,35 @@ class Robot(magicbot.MagicRobot):
         """Create motors and stuff here."""
 
         # a + + b - + c - - d + -
-        x_dist = 0.2165
-        y_dist = 0.2625
-        self.module_a = SwerveModule(  # top left module
+        x_dist = 0.2625
+        y_dist = 0.2165
+        self.module_a = SwerveModule(  # front right module
             "a",
-            steer_talon=ctre.TalonSRX(1),
-            drive_talon=ctre.TalonSRX(2),
+            steer_talon=ctre.TalonSRX(7),
+            drive_talon=ctre.TalonSRX(8),
             x_pos=x_dist,
             y_pos=y_dist,
         )
-        self.module_b = SwerveModule(  # bottom left module
+        self.module_b = SwerveModule(  # top left module
             "b",
+            steer_talon=ctre.TalonSRX(1),
+            drive_talon=ctre.TalonSRX(2),
+            x_pos=-x_dist,
+            y_pos=y_dist,
+        )
+        self.module_c = SwerveModule(  # bottom left module
+            "c",
             steer_talon=ctre.TalonSRX(3),
             drive_talon=ctre.TalonSRX(4),
             x_pos=-x_dist,
-            y_pos=y_dist,
+            y_pos=-y_dist,
             reverse_drive_direction=False,
             reverse_drive_encoder=True
         )
-        self.module_c = SwerveModule(  # bottom right module
-            "c",
+        self.module_d = SwerveModule(  # bottom right module
+            "d",
             steer_talon=ctre.TalonSRX(5),
             drive_talon=ctre.TalonSRX(6),
-            x_pos=-x_dist,
-            y_pos=-y_dist,
-        )
-        self.module_d = SwerveModule(  # front right module
-            "d",
-            steer_talon=ctre.TalonSRX(7),
-            drive_talon=ctre.TalonSRX(8),
             x_pos=x_dist,
             y_pos=-y_dist,
         )
@@ -159,12 +159,23 @@ class Robot(magicbot.MagicRobot):
             self.chassis.set_inputs(0, 0, 0)
 
         if joystick_hat != -1:
-            constrained_angle = -constrain_angle(math.radians(joystick_hat))
+            if self.cargo.has_cargo:
+                constrained_angle = -constrain_angle(math.radians(joystick_hat) + math.pi)
+            else:
+                constrained_angle = -constrain_angle(math.radians(joystick_hat))
             self.chassis.set_heading_sp(constrained_angle)
         
         if self.joystick.getRawButtonPressed(4):
             self.hatch.punch()
-        
+
+        if self.joystick.getTrigger():
+            if self.hatch.has_hatch:
+                self.hatch_deposit.engage()
+            elif self.intake.has_cargo:
+                self.cargo_deposit.engage()
+            else:
+                self.hatch_intake.engage()
+
         if self.joystick.getRawButtonPressed(5):
             self.hatch.clear_to_retract = True
 
