@@ -12,6 +12,16 @@ class ClimbAutomation(StateMachine):
     def start_climb(self):
         self.engage()
 
+    def stop_climb(self):
+        self.front_lift.stop()
+        self.back_lift.stop()
+        self.lift_drive.stop()
+
+    def reset_climb(self):
+        self.front_lift.retract()
+        self.back_lift.retract()
+        self.lift_drive.stop()
+
     @state(first=True, must_finish=True)
     def extend_both_lifts(self, initial_call):
         if initial_call:
