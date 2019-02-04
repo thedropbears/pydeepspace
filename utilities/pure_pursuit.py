@@ -15,10 +15,12 @@ class PurePursuit:
     # speed_modifier = tunable(0)
     # ending_tolerance = tunable(0) # m
 
-    def __init__(self, look_ahead):
+    def __init__(self, look_ahead, look_ahead_speed_modifier):
         self.waypoints = []
         self.current_waypoint_number = 0
         self.look_ahead = look_ahead
+        self.look_ahead_speed_modifier = look_ahead_speed_modifier
+        self.speed_look_ahead = look_ahead
         self.completed_path = False
         self.distance_traveled = 0
 
@@ -41,7 +43,7 @@ class PurePursuit:
         d_y = y_2 - y_1
         d_r = math.sqrt(d_x ** 2 + d_y ** 2)
         D = x_1 * y_2 - x_2 * y_1
-        r = self.look_ahead
+        r = self.speed_look_ahead
         discriminent = r ** 2 * d_r ** 2 - D ** 2
 
         if discriminent >= 0:  # if an intersection exists
@@ -89,7 +91,7 @@ class PurePursuit:
         previous_waypoint = waypoints[0]
         for waypoint in waypoints:
             x, y, theta, speed = waypoint
-            print(waypoint)
+            # print(waypoint)
             waypoint_distance += math.hypot(
                 x - previous_waypoint[0], y - previous_waypoint[1]
             )
@@ -169,7 +171,8 @@ class PurePursuit:
         )
         vx, vy = direction * speed
         heading = segment_end[2]
-        if self.distance_traveled >= segment_end[4]:
+        self.speed_look_ahead = self.look_ahead + self.look_ahead_speed_modifier * speed
+        if self.distance_traveled + self.speed_look_ahead >= segment_end[4]:
             # if we have reached the end of our current segment
             self.current_waypoint_number += 1
             print("changed segment")
