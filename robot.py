@@ -8,7 +8,11 @@ import magicbot
 import wpilib
 from networktables import NetworkTables
 
-from automations.alignment import HatchDepositAligner, HatchIntakeAligner, CargoDepositAligner
+from automations.alignment import (
+    HatchDepositAligner,
+    HatchIntakeAligner,
+    CargoDepositAligner,
+)
 from automations.cargo import CargoManager
 from components.cargo import Arm, Intake
 from components.hatch import Hatch
@@ -73,7 +77,7 @@ class Robot(magicbot.MagicRobot):
             x_pos=-x_dist,
             y_pos=-y_dist,
             reverse_drive_direction=False,
-            reverse_drive_encoder=True
+            reverse_drive_encoder=True,
         )
         self.module_d = SwerveModule(  # bottom right module
             "d",
@@ -159,12 +163,14 @@ class Robot(magicbot.MagicRobot):
             self.chassis.set_inputs(0, 0, 0)
 
         if joystick_hat != -1:
-            if self.cargo.has_cargo:
-                constrained_angle = -constrain_angle(math.radians(joystick_hat) + math.pi)
+            if self.intake.has_cargo:
+                constrained_angle = -constrain_angle(
+                    math.radians(joystick_hat) + math.pi
+                )
             else:
                 constrained_angle = -constrain_angle(math.radians(joystick_hat))
             self.chassis.set_heading_sp(constrained_angle)
-        
+
         if self.joystick.getRawButtonPressed(4):
             self.hatch.punch()
 
@@ -178,6 +184,12 @@ class Robot(magicbot.MagicRobot):
 
         if self.joystick.getRawButtonPressed(5):
             self.hatch.clear_to_retract = True
+
+        if self.joystick.getRawButtonPressed(3):
+            if self.chassis.hold_heading:
+                self.chassis.heading_hold_off()
+            else:
+                self.chassis.heading_hold_on()
 
     def robotPeriodic(self):
         super().robotPeriodic()
@@ -199,7 +211,7 @@ class Robot(magicbot.MagicRobot):
                 * 10  # convert to seconds
                 / module.drive_counts_per_metre,
             )
-    
+
     def testPeriodic(self):
         joystick_vx = -rescale_js(
             self.joystick.getY(), deadzone=0.1, exponential=1.5, rate=0.5
@@ -279,7 +291,7 @@ class Robot(magicbot.MagicRobot):
                 module.steer_motor.set(
                     ctre.ControlMode.Position, module.steer_enc_offset
                 )
-        
+
         if self.joystick.getRawButton(11):
             for module in self.chassis.modules:
                 module.drive_motor.set(ctre.ControlMode.PercentOutput, 0.3)
