@@ -37,10 +37,10 @@ class SwerveChassis:
     def setup(self):
         # Heading PID controller
         self.heading_pid = PIDController(
-            Kp=2.0, Ki=0.0, Kd=1.0, measurement_source=self.imu.getAngle, period=1 / 50
+            Kp=4.5, Ki=0.0, Kd=0.0, measurement_source=self.imu.getAngle, period=1 / 50
         )
         self.heading_pid.setInputRange(-math.pi, math.pi)
-        self.heading_pid.setOutputRange(-2, 2)
+        self.heading_pid.setOutputRange(-3, 3)
         self.heading_pid.setContinuous()
         self.modules = [self.module_a, self.module_b, self.module_c, self.module_d]
 

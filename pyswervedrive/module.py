@@ -82,6 +82,7 @@ class SwerveModule:
         self.steer_motor.setSensorPhase(self.reverse_steer_encoder)
         # changes sign of motor throttle vilues
         self.steer_motor.setInverted(self.reverse_steer_direction)
+        # self.steer_motor.setSelectedSensorPosition(0)
 
         self.steer_motor.config_kP(0, 2.5, 10)
         self.steer_motor.config_kI(0, 0.0, 10)
@@ -99,8 +100,10 @@ class SwerveModule:
         self.drive_motor.setSensorPhase(self.reverse_drive_encoder)
         # changes sign of motor throttle values
         self.drive_motor.setInverted(self.reverse_drive_direction)
+        # Reset drive encoder to 0
+        self.drive_motor.setSelectedSensorPosition(0)
         # TODO: change back to original constants once we get on to real robot
-        self.drive_motor.config_kP(0, 0.1, 10)  # 0.5, 0.002, 0,
+        self.drive_motor.config_kP(0, 0.005, 10)
         self.drive_motor.config_kI(0, 0, 10)
         self.drive_motor.config_kD(0, 0, 10)
         self.drive_motor.config_kF(0, 1024.0 / self.DRIVE_FREE_SPEED, 10)
