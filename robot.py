@@ -195,7 +195,9 @@ class Robot(magicbot.MagicRobot):
             )
             self.sd.putNumber(
                 module.name + "_drive_motor_reading",
-                module.drive_motor.getSelectedSensorVelocity(0) * 10 / module.drive_counts_per_metre,
+                module.drive_motor.getSelectedSensorVelocity(0)
+                * 10  # convert to seconds
+                / module.drive_counts_per_metre,
             )
     
     def testPeriodic(self):
