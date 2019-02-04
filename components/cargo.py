@@ -7,7 +7,7 @@ import wpilib
 class Intake:
 
     motor: ctre.TalonSRX
-    switch: wpilib.DigitalInput
+    intake_switch: wpilib.DigitalInput
 
     def __init__(self):
         self.motor_output = 0
@@ -15,7 +15,7 @@ class Intake:
 
     def execute(self):
         self.motor.set(ctre.ControlMode.PercentOutput, self.motor_output)
-        if self.switch.get():
+        if not self.intake_switch.get():
             self.has_cargo = True
 
     def intake(self):
