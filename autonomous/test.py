@@ -1,4 +1,3 @@
-import numpy as np
 from magicbot.state_machine import AutonomousStateMachine, state
 from utilities.pure_pursuit import PurePursuit
 from pyswervedrive.chassis import SwerveChassis
@@ -16,8 +15,8 @@ class TestPursuitAuto(AutonomousStateMachine):
 
     def __init__(self):
         super().__init__()
-        self.points = ((0, 0, 0, 1), (0.8, 0, 0, 0.5), (1, 0, 0,0.2))
-        self.pursuit = PurePursuit(look_ahead=0.2)
+        self.points = ((0, 0, 0, 1), (0.8, 0, 0, 0.5), (1, 0, 0, 0.2))
+        self.pursuit = PurePursuit(look_ahead=0.2, look_ahead_speed_modifier=0.25)
 
     @state(first=True)
     def move_forwards(self, initial_call):
