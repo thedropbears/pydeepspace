@@ -27,12 +27,12 @@ class Aligner(StateMachine):
         self.successful = False
         self.last_vision = 0
 
-    target_tape_kP_x = tunable(0.5)  # forwards
-    target_tape_kP_y = tunable(1)  # m/s
+    target_tape_kP_x = tunable(0.75)  # forwards
+    target_tape_kP_y = tunable(1.2)  # m/s
 
     @state(first=True)
     def wait_for_vision(self):
-        if math.isnan(self.vision.target_tape_error):
+        if not math.isnan(self.vision.target_tape_error):
             self.next_state("target_tape_align")
 
     @state(must_finish=True)
@@ -47,7 +47,7 @@ class Aligner(StateMachine):
             self.successful = False
             self.last_vision = state_tm
         error = self.vision.target_tape_error
-        if error is None or self.vision.within_deposit_range:
+        if math.isnan(error):
             self.chassis.set_inputs(1, 0, 0, field_oriented=False)
             if state_tm - self.last_vision > 0.5:
                 self.chassis.set_inputs(0, 0, 0)
@@ -58,26 +58,29 @@ class Aligner(StateMachine):
             vx = (1 - abs(error)) * self.target_tape_kP_x
             self.chassis.set_inputs(vx, vy, 0, field_oriented=False)
 
-    @state
+    @state(must_finish=True)
     def success(self):
         self.done()
 
 
 class HatchDepositAligner(Aligner):
 
+    VERBOSE_LOGGING = True
     hatch: Hatch
 
-    @state
-    def success(self):
+    @state(must_finish=True)
+    def success(self, state_tm):
         self.hatch.punch()
-        self.done()
+        if state_tm > 1:
+            self.done()
 
 
 class CargoDepositAligner(Aligner):
 
+    VERBOSE_LOGGING = True
     intake: Intake
 
-    @state
+    @state(must_finish=True)
     def success(self):
         self.intake.deposit()
         self.done()
@@ -85,10 +88,11 @@ class CargoDepositAligner(Aligner):
 
 class HatchIntakeAligner(Aligner):
 
+    VERBOSE_LOGGING = True
     hatch: Hatch
     # TODO delete this once limit switches are working
 
-    @state
+    @state(must_finish=True)
     def success(self):
         self.hatch.has_hatch = True
         self.done()
