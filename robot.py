@@ -3,8 +3,6 @@ import enum
 import math
 
 import ctre
-
-# import rev
 import magicbot
 import wpilib
 from networktables import NetworkTables
@@ -19,7 +17,7 @@ from components.cargo import Arm, Intake
 from components.hatch import Hatch
 from automations.climb import ClimbAutomation
 from components.vision import Vision
-from components.climb import Lift, LiftDrive
+from components.climb import Climber, LiftDrive
 from pyswervedrive.chassis import SwerveChassis
 from pyswervedrive.module import SwerveModule
 from utilities.functions import constrain_angle, rescale_js
@@ -62,8 +60,7 @@ class Robot(magicbot.MagicRobot):
     hatch: Hatch
     intake: Intake
 
-    front_lift: Lift
-    back_lift: Lift
+    climber: Climber
     lift_drive: LiftDrive
 
     vision: Vision
@@ -119,13 +116,13 @@ class Robot(magicbot.MagicRobot):
         self.hatch_top_limit_switch = wpilib.DigitalInput(1)
         self.hatch_left_limit_switch = wpilib.DigitalInput(2)
         self.hatch_right_limit_switch = wpilib.DigitalInput(3)
-        # self.front_lift_motor = rev.CANSparkMax(0, rev.MotorType.kBrushless)
-        self.front_lift_limit_switch = wpilib.DigitalInput(4)
 
-        # self.back_lift_motor = rev.CANSparkMax(1, rev.MotorType.kBrushless)
-        self.back_lift_limit_switch = wpilib.DigitalInput(5)
+        self.climber_front_motor = ctre.TalonSRX(21)
+        self.climber_back_motor = ctre.TalonSRX(22)
 
         self.lift_drive_motor = ctre.TalonSRX(20)
+        self.lift_drive_front_limit_switch = wpilib.DigitalInput(4)
+        self.lift_drive_back_limit_switch = wpilib.DigitalInput(5)
 
         # cargo related objects
         self.intake_motor = ctre.TalonSRX(9)
