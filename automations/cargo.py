@@ -1,6 +1,5 @@
 from magicbot import StateMachine, state
 
-from automations.alignment import Aligner
 from components.cargo import Arm, Intake
 
 
@@ -8,7 +7,6 @@ class CargoManager(StateMachine):
 
     arm: Arm
     intake: Intake
-    align: Aligner
 
     def __init__(self):
         super().__init__()
@@ -49,13 +47,14 @@ class CargoManager(StateMachine):
     @state(must_finish=True)
     def outtaking_cargo(self, initial_call):
         if not self.override:
-            if initial_call:
-                self.align.align()
-            if not self.align.is_executing:
-                if self.align.successful:
-                    self.intake.outtake()
-                else:
-                    self.done()
+            # if initial_call:
+            #     self.align.align()
+            # if not self.align.is_executing:
+            #     if self.align.successful:
+            #         self.intake.outtake()
+            # else:
+            # self.done()
+            pass
         else:
             self.intake.outtake()
 

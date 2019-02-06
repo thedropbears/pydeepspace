@@ -15,10 +15,12 @@ class PurePursuit:
     # speed_modifier = tunable(0)
     # ending_tolerance = tunable(0) # m
 
-    def __init__(self, look_ahead):
+    def __init__(self, look_ahead, look_ahead_speed_modifier):
         self.waypoints = []
         self.current_waypoint_number = 0
         self.look_ahead = look_ahead
+        self.look_ahead_speed_modifier = look_ahead_speed_modifier
+        self.speed_look_ahead = look_ahead
         self.completed_path = False
         self.distance_traveled = 0
 
@@ -30,7 +32,7 @@ class PurePursuit:
         """
         x_1, y_1 = waypoint_start[0], waypoint_start[1]
         x_2, y_2 = waypoint_end[0], waypoint_end[1]
-        robot_x, robot_y, _ = robot_position
+        robot_x, robot_y, _, __ = robot_position
         x_2 -= robot_x
         x_1 -= robot_x
         y_2 -= robot_y
@@ -41,7 +43,7 @@ class PurePursuit:
         d_y = y_2 - y_1
         d_r = math.sqrt(d_x ** 2 + d_y ** 2)
         D = x_1 * y_2 - x_2 * y_1
-        r = self.look_ahead
+        r = self.speed_look_ahead
         discriminent = r ** 2 * d_r ** 2 - D ** 2
 
         if discriminent >= 0:  # if an intersection exists
@@ -76,7 +78,7 @@ class PurePursuit:
         """
         Take in a list of waypoints used to build a path.
 
-        The waypoints must be a tuple (x, y, speed), this method will
+        The waypoints must be a tuple (x, y, theta, speed), this method will
         create waypoints with these co-ordinates and distance
         along the path from the start of the trajectory.
         """
@@ -88,14 +90,15 @@ class PurePursuit:
         waypoint_distance = 0
         previous_waypoint = waypoints[0]
         for waypoint in waypoints:
-            x, y, speed = waypoint
+            x, y, theta, speed = waypoint
+            # print(waypoint)
             waypoint_distance += math.hypot(
                 x - previous_waypoint[0], y - previous_waypoint[1]
             )
             previous_waypoint = waypoint
-            self.waypoints.append((x, y, speed, waypoint_distance))
+            self.waypoints.append((x, y, theta, speed, waypoint_distance))
         self.current_waypoint_number = 0
-        print(self.waypoints)
+        print(f"waypoints = {self.waypoints}")
 
     def compute_direction(
         self, robot_position, segment_start, segment_end, distance_along_path
@@ -107,10 +110,6 @@ class PurePursuit:
             # use the next waypoint as our goal point
             goal_point = segment_end[:2]
         # print(goal_point)
-        if self.distance_traveled >= segment_end[3]:
-            # if we have reached the end of our current segment
-            self.current_waypoint_number += 1
-            print("changed segment")
         goal_point = goal_point / np.linalg.norm(goal_point)
         return goal_point
 
@@ -127,7 +126,7 @@ class PurePursuit:
         Every timestep, add the distance the robot has travelled to a
         running total used to check for waypoints.
         """
-        robot_x, robot_y, _ = robot_position
+        robot_x, robot_y, _, __ = robot_position
         self.distance_traveled += math.hypot(
             robot_x - self.last_robot_x, robot_y - self.last_robot_y
         )
@@ -162,8 +161,8 @@ class PurePursuit:
         distance_along_path = self.distance_along_path(robot_position)
         segment_start = self.waypoints[self.current_waypoint_number]
         segment_end = self.waypoints[self.current_waypoint_number + 1]
-        start_speed, start_distance = segment_start[2:]
-        end_speed, end_distance = segment_end[2:]
+        start_speed, start_distance = segment_start[3:]
+        end_speed, end_distance = segment_end[3:]
         direction = self.compute_direction(
             robot_position, segment_start, segment_end, distance_along_path
         )
@@ -171,5 +170,10 @@ class PurePursuit:
             start_distance, end_distance, start_speed, end_speed, distance_along_path
         )
         vx, vy = direction * speed
-        heading = 0
+        heading = segment_end[2]
+        self.speed_look_ahead = self.look_ahead + self.look_ahead_speed_modifier * speed
+        if self.distance_traveled + self.speed_look_ahead >= segment_end[4]:
+            # if we have reached the end of our current segment
+            self.current_waypoint_number += 1
+            print("changed segment")
         return vx, vy, heading
