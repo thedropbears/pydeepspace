@@ -3,6 +3,7 @@ import time
 
 from collections import OrderedDict
 
+from networktables import NetworkTables
 from networktables.util import ntproperty
 
 from pyswervedrive.chassis import SwerveChassis
@@ -34,6 +35,7 @@ class Vision:
         )
         self.ping()
         self.pong()
+        NetworkTables.flush()
 
     @property
     def fiducial_in_sight(self):
