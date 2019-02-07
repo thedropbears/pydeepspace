@@ -27,12 +27,13 @@ class Aligner(StateMachine):
         self.successful = False
         self.last_vision = 0
 
+    alignment_speed = tunable(1.0)  # m/s
     target_tape_kP_x = tunable(0.75)  # forwards
     target_tape_kP_y = tunable(0.75)  # m/s
 
     @state(first=True)
     def wait_for_vision(self):
-        if not math.isnan(self.vision.target_tape_error):
+        if self.vision.fiducial_in_sight:
             self.next_state("target_tape_align")
 
     @state(must_finish=True)
@@ -46,16 +47,19 @@ class Aligner(StateMachine):
         if initial_call:
             self.successful = False
             self.last_vision = state_tm
-        error = self.vision.target_tape_error
-        if math.isnan(error):
-            self.chassis.set_inputs(0.75, 0, 0, field_oriented=False)
+        if not self.vision.fiducial_in_sight:
+            self.chassis.set_inputs(alignment_speed, 0, 0, field_oriented=False)
             if state_tm - self.last_vision > 0.5:
                 self.chassis.set_inputs(0, 0, 0)
                 self.next_state("success")
         else:
             self.last_vision = state_tm
-            vy = error * self.target_tape_kP_y
-            vx = (1 - abs(error)) * self.target_tape_kP_x
+            fiducial_x, fiducial_y, delta_heading = self.vision.get_fiducial_position()
+            # Aim for a point in front of the fiducial
+            fiducial_x = fiducial_x / 2
+            norm = math.hypot(fiducial_x, fiducial_y)
+            vx = self.alignment_speed * fiducial_x / norm
+            vy = self.alignment_speed * fiducial_y / norm
             self.chassis.set_inputs(vx, vy, 0, field_oriented=False)
 
     @state(must_finish=True)
