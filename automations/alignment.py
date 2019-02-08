@@ -48,7 +48,7 @@ class Aligner(StateMachine):
             self.successful = False
             self.last_vision = state_tm
         if not self.vision.fiducial_in_sight:
-            self.chassis.set_inputs(alignment_speed, 0, 0, field_oriented=False)
+            self.chassis.set_inputs(self.alignment_speed, 0, 0, field_oriented=False)
             if state_tm - self.last_vision > 0.5:
                 self.chassis.set_inputs(0, 0, 0)
                 self.next_state("success")

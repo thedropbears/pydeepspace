@@ -29,9 +29,9 @@ class Vision:
     def execute(self):
         """Store the current odometry in the queue. Allows projection of target into current position."""
         self.odometry[time.time()] = (
-            chassis.odometry_x,
-            chassis.odometry_y,
-            chassis.last_heading,
+            self.chassis.odometry_x,
+            self.chassis.odometry_y,
+            self.chassis.last_heading,
         )
         self.ping()
         self.pong()
@@ -45,11 +45,11 @@ class Vision:
         """Return the position of the retroreflective fiducials relative to the current robot pose."""
         vision_time = self.fiducial_time - self.latency
         if self.fiducial_in_sight:  # Only return if not too stale
-            vision_delta_x, vision_delta_y, vision_delta_heading = _get_pose(
+            vision_delta_x, vision_delta_y, vision_delta_heading = self._get_pose_delta(
                 vision_time
             )
-            x = fiducial_x - vision_delta_x
-            y = fiducial_y - vision_delta_y
+            x = self.fiducial_x - vision_delta_x
+            y = self.fiducial_y - vision_delta_y
             return x, y
         return None, None
 
