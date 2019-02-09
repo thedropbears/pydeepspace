@@ -17,7 +17,7 @@ from components.cargo import Arm, Intake
 from components.hatch import Hatch
 from automations.climb import ClimbAutomation
 from components.vision import Vision
-from components.climb import Climber, LiftDrive
+from components.climb import Climber
 from pyswervedrive.chassis import SwerveChassis
 from pyswervedrive.module import SwerveModule
 from utilities.functions import constrain_angle, rescale_js
@@ -61,7 +61,6 @@ class Robot(magicbot.MagicRobot):
     intake: Intake
 
     climber: Climber
-    lift_drive: LiftDrive
 
     vision: Vision
 
@@ -119,10 +118,9 @@ class Robot(magicbot.MagicRobot):
 
         self.climber_front_motor = ctre.TalonSRX(21)
         self.climber_back_motor = ctre.TalonSRX(22)
-
-        self.lift_drive_motor = ctre.TalonSRX(20)
-        self.lift_drive_front_limit_switch = wpilib.DigitalInput(4)
-        self.lift_drive_back_limit_switch = wpilib.DigitalInput(5)
+        self.climber_front_limit_switch = wpilib.DigitalInput(4)
+        self.climber_back_limit_switch = wpilib.DigitalInput(5)
+        self.climber_drive_motor = ctre.TalonSRX(20)
 
         # cargo related objects
         self.intake_motor = ctre.TalonSRX(9)
