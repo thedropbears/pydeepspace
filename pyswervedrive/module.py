@@ -221,6 +221,7 @@ class SwerveModule:
         else:
             # figure out the most efficient way to get the module to the desired direction
             # current_unwound_azimuth = self.measured_azimuth
+            self.read_steer_pos()  # TODO this is for debugging the unwinding issue, remove once fixed
             current_unwound_azimuth = constrain_angle(self.current_azimuth_sp)
             delta = self.min_angular_displacement(
                 current_unwound_azimuth, desired_azimuth
@@ -236,7 +237,7 @@ class SwerveModule:
             azimuth_to_set * self.STEER_COUNTS_PER_RADIAN + self.steer_enc_offset
         )
         self.steer_motor.set(ctre.ControlMode.Position, self.setpoint)
-        self.current_azimuth_sp = azimuth_to_set
+        # self.current_azimuth_sp = azimuth_to_set TODO uncomment this once the unwinding is fixed
 
         if not absolute_rotation:
             # logic to only move the modules when we are close to the corret angle
