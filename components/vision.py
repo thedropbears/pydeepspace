@@ -40,11 +40,11 @@ class Vision:
 
     @property
     def fiducial_in_sight(self):
-        return time.monotonic() - self.fiducial_time - self.latency < 0.5
+        return time.monotonic() - (self.fiducial_time + self.latency) < 0.5
 
     def get_fiducial_position(self):
         """Return the position of the retroreflective fiducials relative to the current robot pose."""
-        vision_time = self.fiducial_time - self.latency
+        vision_time = self.fiducial_time + self.latency
         if self.fiducial_in_sight:  # Only return if not too stale
             vision_delta_x, vision_delta_y, vision_delta_heading = self._get_pose_delta(
                 vision_time
