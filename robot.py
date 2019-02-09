@@ -259,14 +259,11 @@ class Robot(magicbot.MagicRobot):
                 )
 
     def closest_field_angle(self, robot_heading):
-        lowest_distance = 2 * math.pi
-        lowest_label = None
-        for label, angle in self.field_angles.items():
-            diff = constrain_angle(constrain_angle(robot_heading) - angle)
-            if abs(diff) < lowest_distance:
-                lowest_distance = abs(diff)
-                lowest_label = label
-        return lowest_label
+        label, _ = min(
+            self.field_angles.items(),
+            key=lambda a: abs(constrain_angle(robot_heading - a[1])),
+        )
+        return label
 
 
 if __name__ == "__main__":
