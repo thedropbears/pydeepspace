@@ -23,12 +23,12 @@ class Vision:
 
     def __init__(self):
         self.latency = 0.0
-        self.last_pong = time.time()
+        self.last_pong = time.monotonic()
         self.odometry = OrderedDict()
 
     def execute(self):
         """Store the current odometry in the queue. Allows projection of target into current position."""
-        self.odometry[time.time()] = (
+        self.odometry[time.monotonic()] = (
             self.chassis.odometry_x,
             self.chassis.odometry_y,
             self.chassis.last_heading,
@@ -39,7 +39,7 @@ class Vision:
 
     @property
     def fiducial_in_sight(self):
-        return time.time() - self.fiducial_time - self.latency < 0.5
+        return time.monotonic() - self.fiducial_time - self.latency < 0.5
 
     def get_fiducial_position(self):
         """Return the position of the retroreflective fiducials relative to the current robot pose."""
@@ -64,7 +64,7 @@ class Vision:
                 break
         # Remove old entries from the back of the queue
         pops = 0
-        now = time.time()
+        now = time.monotonic()
         while next(iter(self.odometry.reversed().keys())) < now - 3.0:
             pops += 1
         while pops > 0:
@@ -81,7 +81,7 @@ class Vision:
 
     def ping(self):
         """Send a ping to the RasPi to determine the connection latency."""
-        self.ping_time = time.time()
+        self.ping_time = time.monotonic()
 
     def pong(self):
         """Receive a pong from the RasPi to determine the connection latency."""
