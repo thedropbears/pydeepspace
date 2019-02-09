@@ -224,7 +224,6 @@ class Robot(magicbot.MagicRobot):
                 * 10  # convert to seconds
                 / module.drive_counts_per_metre,
             )
-        self.sd.putBoolean("heading_hold", self.chassis.hold_heading)
 
     def testPeriodic(self):
         joystick_vx = -rescale_js(
