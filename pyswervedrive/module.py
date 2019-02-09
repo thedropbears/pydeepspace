@@ -50,10 +50,12 @@ class SwerveModule:
 
         self.name = name
 
-        self.nt = NetworkTables.getTable("SwerveConfig").getSubTable(name)
+        self.nt = NetworkTables.getTable("SwerveDrive").getSubTable(name)
         self.steer_enc_offset_entry = self.nt.getEntry("steer_enc_offset")
         self.steer_enc_offset_entry.setDefaultDouble(0)
-        self.steer_enc_offset_entry.setPersistent()
+        self.steer_enc_offset_entry.addListener(
+            self.nt_offset_changed, NetworkTables.NotifyFlags.UPDATE
+        )
 
         self.steer_motor = steer_talon
         self.drive_motor = drive_talon
@@ -68,6 +70,8 @@ class SwerveModule:
 
         self.aligned = False
         self.last_speed = 0
+
+        self.steer_enc_offset = self.steer_motor.configGetCustomParam(0, timoutMs=10)
 
         self.update_odometry()
 
@@ -130,11 +134,16 @@ class SwerveModule:
             sp - self.steer_enc_offset
         ) / self.STEER_COUNTS_PER_RADIAN
 
+    def nt_offset_changed(self, entry, key, value, param):
+        self.steer_enc_offset = value
+        self.steer_motor.configSetCustomParam(value, 0, timeoutMs=10)
+
     def store_steer_offsets(self):
         """Store the current steer positions as the offsets."""
-        self.steer_enc_offset_entry.setDouble(
-            self.steer_motor.getSelectedSensorPosition(0)
-        )
+        pos = self.steer_motor.getSelectedSensorPosition(0)
+        self.steer_enc_offset = pos
+        self.steer_enc_offset_entry.setDouble(pos)
+        self.steer_motor.configSetCustomParam(pos, 0, timeoutMs=10)
 
     def reset_encoder_delta(self):
         """Re-zero the encoder deltas as returned from get_encoder_delta.
@@ -253,10 +262,6 @@ class SwerveModule:
             self.drive_motor.set(
                 ctre.ControlMode.Velocity, speed * self.drive_velocity_to_native_units
             )
-
-    @property
-    def steer_enc_offset(self):
-        return int(self.steer_enc_offset_entry.getDouble(0))
 
     def update_odometry(self):
         drive_pos = self.drive_motor.getSelectedSensorPosition(0)
