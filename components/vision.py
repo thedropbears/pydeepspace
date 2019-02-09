@@ -32,7 +32,7 @@ class Vision:
         self.odometry[time.monotonic()] = (
             self.chassis.odometry_x,
             self.chassis.odometry_y,
-            self.chassis.last_heading,
+            self.chassis.imu.getAngle(),
         )
         self.ping()
         self.pong()
@@ -51,8 +51,8 @@ class Vision:
             )
             x = self.fiducial_x - vision_delta_x
             y = self.fiducial_y - vision_delta_y
-            return x, y
-        return None, None
+            return x, y, vision_delta_heading
+        return None, None, None
 
     def _get_pose_delta(self, t):
         """Search the stored odometry and return the position difference between now and the specified time."""
@@ -66,11 +66,13 @@ class Vision:
         # Remove old entries from the back of the queue
         pops = 0
         now = time.monotonic()
-        while next(iter(self.odometry.reversed().keys())) < now - 3.0:
+        rev_keys = reversed(self.odometry.keys())
+        while next(rev_keys) < now - 3.0:
             pops += 1
         while pops > 0:
             self.odometry.popitem(last=True)
             pops -= 1
+
         x = current[0] - previous[0]
         y = current[1] - previous[1]
         # Rotate to the robot frame of reference
