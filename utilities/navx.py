@@ -17,6 +17,22 @@ class NavX:
         raw = self.ahrs.getYaw()
         return -math.radians(raw)
 
+    def getRoll(self) -> float:
+        """Get current roll in radians (rotation around Y axis)
+
+        Angles are in the interval [-pi, pi], anticlockwise positive.
+        """
+        raw = self.ahrs.getRoll()
+        return -math.radians(raw)
+
+    def getPitch(self) -> float:
+        """Get current pitch in radians (rotation around X axis)
+
+        Angles are in the interval [-pi, pi], anticlockwise positive.
+        """
+        raw = self.ahrs.getPitch()
+        return -math.radians(raw)
+
     def resetHeading(self):
         """Zero the yaw."""
         self.ahrs.reset()
