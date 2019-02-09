@@ -26,7 +26,7 @@ class Hatch:
 
     def execute(self):
         """Run at the end of every control loop iteration."""
-        delay = 0
+        delay = -1
         self.hatch_bottom_puncher.set(self._punch_on)
         self.hatch_left_puncher.set(self._punch_on and self.loop_counter > delay)
         self.hatch_right_puncher.set(self._punch_on and self.loop_counter > delay)
