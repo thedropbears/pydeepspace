@@ -1,7 +1,7 @@
 import math
 import time
 
-from collections import OrderedDict
+from collections import deque
 
 from networktables import NetworkTables
 from networktables.util import ntproperty
@@ -25,14 +25,17 @@ class Vision:
     def __init__(self):
         self.latency = 0.0
         self.last_pong = time.monotonic()
-        self.odometry = OrderedDict()
+        self.odometry = deque(maxlen=50 * 2)  # 50Hz control loop for 2 secs
 
     def execute(self):
         """Store the current odometry in the queue. Allows projection of target into current position."""
-        self.odometry[time.monotonic()] = (
-            self.chassis.odometry_x,
-            self.chassis.odometry_y,
-            self.chassis.imu.getAngle(),
+        self.odometry.appendleft(
+            (
+                self.chassis.odometry_x,
+                self.chassis.odometry_y,
+                self.chassis.imu.getAngle(),
+                time.monotonic(),
+            )
         )
         self.ping()
         self.pong()
@@ -56,22 +59,13 @@ class Vision:
 
     def _get_pose_delta(self, t):
         """Search the stored odometry and return the position difference between now and the specified time."""
-        current = next(iter(self.odometry.values()))
-        previous = next(iter(self.odometry.values()))
-        for tm, pose in self.odometry.items():
-            if tm > t:
-                previous = pose
+        current = self.odometry[0]
+        previous = self.odometry[0]
+        for odom in self.odometry:
+            if odom[3] > t:
+                previous = odom
             else:
                 break
-        # Remove old entries from the back of the queue
-        pops = 0
-        now = time.monotonic()
-        rev_keys = reversed(self.odometry.keys())
-        while next(rev_keys) < now - 3.0:
-            pops += 1
-        while pops > 0:
-            self.odometry.popitem(last=True)
-            pops -= 1
 
         x = current[0] - previous[0]
         y = current[1] - previous[1]
