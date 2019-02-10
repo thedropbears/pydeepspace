@@ -48,6 +48,8 @@ class Robot(magicbot.MagicRobot):
     back_lift: Lift
     lift_drive: LiftDrive
 
+    vision: Vision
+
     offset_rotation_rate = 20
 
     field_angles = {
@@ -98,7 +100,6 @@ class Robot(magicbot.MagicRobot):
             y_pos=-y_dist,
         )
         self.imu = NavX()
-        self.vision = Vision()
 
         self.sd = NetworkTables.getTable("SmartDashboard")
         wpilib.SmartDashboard.putData("Gyro", self.imu.ahrs)
@@ -131,6 +132,7 @@ class Robot(magicbot.MagicRobot):
     def disabledPeriodic(self):
         self.chassis.set_inputs(0, 0, 0)
         self.imu.resetHeading()
+        self.vision.execute()  # Keep the time offset calcs running
 
     def teleopInit(self):
         """Initialise driver control."""
@@ -226,6 +228,8 @@ class Robot(magicbot.MagicRobot):
             )
 
     def testPeriodic(self):
+        self.vision.execute()  # Keep the time offset calcs running
+
         joystick_vx = -rescale_js(
             self.joystick.getY(), deadzone=0.1, exponential=1.5, rate=0.5
         )

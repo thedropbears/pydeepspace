@@ -92,7 +92,7 @@ class AutoBase(AutonomousStateMachine):
             self.pursuit.build_path(waypoints)
         self.follow_path()
         if (
-            not math.isnan(self.vision.target_tape_error) and self.ready_for_vision()
+            self.vision.fiducial_in_sight and self.ready_for_vision()
         ) or self.pursuit.completed_path:
             self.next_state("deposit_hatch")
             self.completed_runs += 1
@@ -135,7 +135,7 @@ class AutoBase(AutonomousStateMachine):
             self.pursuit.build_path(waypoints)
         self.follow_path()
         if (
-            not math.isnan(self.vision.target_tape_error) and self.ready_for_vision()
+            self.vision.fiducial_in_sight and self.ready_for_vision()
         ) or self.pursuit.completed_path:
             self.next_state("intake_hatch")
 
