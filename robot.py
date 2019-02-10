@@ -268,8 +268,6 @@ class Robot(magicbot.MagicRobot):
         )
         return label
 
-        self.vision.execute()  # Keep the time offset calcs running
-
 
 if __name__ == "__main__":
     wpilib.run(Robot)
