@@ -60,36 +60,36 @@ class PurePursuit:
         http://mathworld.wolfram.com/Circle-LineIntersection.html
         NOTE: this will return the intersections in global co-ordinates
         """
-        x_1, y_1 = waypoint_start.x, waypoint_start.y
-        x_2, y_2 = waypoint_end.x, waypoint_end.y
+        x1, y1 = waypoint_start.x, waypoint_start.y
+        x2, y2 = waypoint_end.x, waypoint_end.y
         robot_x, robot_y = robot_position
-        x_2 -= robot_x
-        x_1 -= robot_x
-        y_2 -= robot_y
-        y_1 -= robot_y
-        segment_end = np.array((x_2, y_2))
+        x2 -= robot_x
+        x1 -= robot_x
+        y2 -= robot_y
+        y1 -= robot_y
+        segment_end = np.array((x2, y2))
 
-        d_x = x_2 - x_1
-        d_y = y_2 - y_1
-        d_r = math.hypot(d_x, d_y)
-        D = x_1 * y_2 - x_2 * y_1
+        dx = x2 - x1
+        dy = y2 - y1
+        dr = math.hypot(dx, dy)
+        D = x1 * y2 - x2 * y1
         r = self.speed_look_ahead
-        discriminent = r ** 2 * d_r ** 2 - D ** 2
+        delta = r ** 2 * dr ** 2 - D ** 2
 
-        if discriminent >= 0:  # if an intersection exists
-            sqrt_discriminent = math.sqrt(discriminent)
+        if delta >= 0:  # if an intersection exists
+            sqrt_delta = math.sqrt(delta)
 
-            right_x = self.sgn(d_y) * d_x * sqrt_discriminent
-            left_x = D * d_y
-            right_y = abs(d_y) * sqrt_discriminent
-            left_y = -D * d_x
-            denominator = d_r ** 2
+            right_x = self.sgn(dy) * dx * sqrt_delta
+            left_x = D * dy
+            right_y = abs(dy) * sqrt_delta
+            left_y = -D * dx
+            denominator = dr ** 2
             if denominator == 0:
                 print("Pursuit: caught division by zero")
                 return
             intersection_1 = np.array((left_x + right_x, left_y + right_y))
             intersection_1 /= denominator
-            if discriminent == 0:  # if we are tangent to our path
+            if delta == 0:  # if we are tangent to our path
                 return intersection_1
             intersection_2 = np.array((left_x - right_x, left_y - right_y))
             intersection_2 /= denominator
