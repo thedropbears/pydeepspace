@@ -198,8 +198,8 @@ def insert_trapezoidal_waypoints(waypoints, acceleration, deceleration):
         dy = segment_end[1] - segment_start[1]
 
         segment_distance = math.hypot(dx, dy)
-        u = segment_start[2]
-        v = segment_end[2]
+        u = segment_start[3]
+        v = segment_end[3]
 
         trap_waypoints.append(segment_start)
         if v > u:
@@ -215,8 +215,9 @@ def insert_trapezoidal_waypoints(waypoints, acceleration, deceleration):
                 dx * s / segment_distance + segment_start[0],
                 dy * s / segment_distance + segment_start[1],
             ) + segment_end[2:]
+            trap_waypoints.append(intermediate)
 
-        else:
+        elif u > v:
             a = deceleration
             # Rearrange v^2 = u^2 + 2as, then subtract from the segment length
             s = segment_distance - (v ** 2 - u ** 2) / (2 * a)
@@ -228,8 +229,7 @@ def insert_trapezoidal_waypoints(waypoints, acceleration, deceleration):
                 dx * s / segment_distance + segment_start[0],
                 dy * s / segment_distance + segment_start[1],
             ) + segment_start[2:]
-
-        trap_waypoints.append(intermediate)
+            trap_waypoints.append(intermediate)
 
     trap_waypoints.append(waypoints[-1])
     return trap_waypoints
