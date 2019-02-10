@@ -118,8 +118,8 @@ class Robot(magicbot.MagicRobot):
 
         self.climber_front_motor = ctre.TalonSRX(21)
         self.climber_back_motor = ctre.TalonSRX(22)
-        self.climber_front_limit_switch = wpilib.DigitalInput(4)
-        self.climber_back_limit_switch = wpilib.DigitalInput(5)
+        self.climber_front_podium_switch = wpilib.DigitalInput(4)
+        self.climber_back_podium_switch = wpilib.DigitalInput(5)
         self.climber_drive_motor = ctre.TalonSRX(20)
 
         # cargo related objects
