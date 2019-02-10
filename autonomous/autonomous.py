@@ -85,9 +85,11 @@ class AutoBase(AutonomousStateMachine):
                     self.acceleration,
                     self.deceleration,
                 )
+            else:
+                self.next_state("drive_to_loading_bay")
+                self.completed_runs += 1
+                return
             self.pursuit.build_path(waypoints)
-        if self.pursuit.completed_path and self.completed_runs > 3:
-            self.next_state("stop")
         self.follow_path()
         if (
             not math.isnan(self.vision.target_tape_error) and self.ready_for_vision()
@@ -127,8 +129,9 @@ class AutoBase(AutonomousStateMachine):
                     self.acceleration,
                     self.deceleration,
                 )
-            elif self.completed_runs == 3:
+            else:
                 self.next_state("stop")
+                return
             self.pursuit.build_path(waypoints)
         self.follow_path()
         if (
