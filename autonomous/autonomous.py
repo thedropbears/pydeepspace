@@ -7,10 +7,10 @@ from components.hatch import Hatch
 from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
 from utilities.navx import NavX
-from utilities.pure_pursuit import PurePursuit, insert_trapezoidal_waypoints
+from utilities.pure_pursuit import PurePursuit, Waypoint, insert_trapezoidal_waypoints
 
 
-def reflect_2d_y(v: tuple) -> tuple:
+def reflect_y(v: Waypoint) -> Waypoint:
     return (v[0], -v[1], v[2], v[3])
 
 
@@ -181,10 +181,10 @@ class RightStartAuto(AutoBase):
 
     def __init__(self):
         super().__init__()
-        self.front_cargo_bay = reflect_2d_y(self.front_cargo_bay)
-        self.setup_loading_bay = reflect_2d_y(self.setup_loading_bay)
-        self.loading_bay = reflect_2d_y(self.loading_bay)
-        self.side_cargo_bay = reflect_2d_y(self.side_cargo_bay)
+        self.front_cargo_bay = reflect_y(self.front_cargo_bay)
+        self.setup_loading_bay = reflect_y(self.setup_loading_bay)
+        self.loading_bay = reflect_y(self.loading_bay)
+        self.side_cargo_bay = reflect_y(self.side_cargo_bay)
 
 
 class LeftStartAuto(AutoBase):

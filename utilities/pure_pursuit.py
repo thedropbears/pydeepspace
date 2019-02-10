@@ -1,32 +1,44 @@
 import math
+from typing import List, Optional, Sequence, Tuple
+
 import numpy as np
 
-# from magicbot import tunable
+#: A point in 2D cartesian space.
+Cartesian2D = Tuple[float, float]
+#: x, y, theta, speed
+Waypoint = Tuple[float, float, float, float]
+#: A Waypoint with an additional cumulative distance.
+Segment = Tuple[float, float, float, float, float]
 
 
 class PurePursuit:
     """
-    Pure Pursuit controller for navigation with absolute waypoints
+    Pure Pursuit controller for navigation with absolute waypoints.
+
     Uses the method outlined here with some changes to be suitible for a swervedrive
     https://www.ri.cmu.edu/pub_files/pub3/coulter_r_craig_1992_1/coulter_r_craig_1992_1.pdf
     """
 
-    # look_ahead = tunable(0) # m
-    # speed_modifier = tunable(0)
-    # ending_tolerance = tunable(0) # m
+    waypoints: List[Segment]
 
-    def __init__(self, look_ahead, look_ahead_speed_modifier):
+    def __init__(self, look_ahead: float, look_ahead_speed_modifier: float):
         self.waypoints = []
         self.current_waypoint_number = 0
         self.look_ahead = look_ahead
         self.look_ahead_speed_modifier = look_ahead_speed_modifier
         self.speed_look_ahead = look_ahead
         self.completed_path = False
-        self.distance_traveled = 0
+        self.distance_traveled = 0.0
 
-    def find_intersections(self, waypoint_start, waypoint_end, robot_position):
+    def find_intersections(
+        self,
+        waypoint_start: Segment,
+        waypoint_end: Segment,
+        robot_position: Cartesian2D,
+    ) -> Optional[np.ndarray]:
         """
         Find the intersection/s between our lookahead distance and path.
+
         http://mathworld.wolfram.com/Circle-LineIntersection.html
         NOTE: this will return the intersections in global co-ordinates
         """
@@ -74,7 +86,7 @@ class PurePursuit:
         else:
             print("No intersection found")
 
-    def build_path(self, waypoints):
+    def build_path(self, waypoints: Sequence[Waypoint]) -> None:
         """
         Take in a list of waypoints used to build a path.
 
@@ -87,7 +99,7 @@ class PurePursuit:
         self.completed_path = False
         self.distance_traveled = 0
         self.waypoints = []
-        waypoint_distance = 0
+        waypoint_distance = 0.0
         previous_waypoint = waypoints[0]
         for waypoint in waypoints:
             x, y, theta, speed = waypoint
@@ -101,8 +113,12 @@ class PurePursuit:
         print(f"waypoints = {self.waypoints}")
 
     def compute_direction(
-        self, robot_position, segment_start, segment_end, distance_along_path
-    ):
+        self,
+        robot_position: Cartesian2D,
+        segment_start: Segment,
+        segment_end: Segment,
+        distance_along_path: float,
+    ) -> np.ndarray:
         """Find the goal_point and convert it to relative co-ordinates"""
         goal_point = self.find_intersections(segment_start, segment_end, robot_position)
         if goal_point is None:
@@ -113,14 +129,15 @@ class PurePursuit:
         goal_point = goal_point / np.linalg.norm(goal_point)
         return goal_point
 
-    def sgn(self, number):
+    @staticmethod
+    def sgn(number: float) -> int:
         """Returns the sign of a number, 0 is positive"""
         if number < 0:
             return -1
         else:
             return 1
 
-    def distance_along_path(self, robot_position):
+    def distance_along_path(self, robot_position: Cartesian2D) -> float:
         """
         Find the robots position on the path using odometry.
         Every timestep, add the distance the robot has travelled to a
@@ -137,14 +154,14 @@ class PurePursuit:
 
     def find_speed(
         self,
-        start_path_distance,
-        end_path_distance,
-        start_speed,
-        end_speed,
-        distance_along_path,
-    ):
+        start_path_distance: float,
+        end_path_distance: float,
+        start_speed: float,
+        end_speed: float,
+        distance_along_path: float,
+    ) -> float:
         """
-        Find the how fast the robot should be moving at it's current point.
+        Find the how fast the robot should be moving at its current point.
         """
         local_robot_distance = distance_along_path - start_path_distance
         local_end_distance = end_path_distance - start_path_distance
@@ -153,11 +170,11 @@ class PurePursuit:
         target_speed = speed_difference * portion_path_completed + start_speed
         return target_speed
 
-    def find_velocity(self, robot_position):
+    def find_velocity(self, robot_position: Cartesian2D) -> Tuple[float, float, float]:
         if self.current_waypoint_number >= len(self.waypoints) - 1:
             self.completed_path = True
-            print("path completed")
-            return None, None, None
+            print("WARNING: path completed")
+            return 0, 0, 0
         distance_along_path = self.distance_along_path(robot_position)
         segment_start = self.waypoints[self.current_waypoint_number]
         segment_end = self.waypoints[self.current_waypoint_number + 1]
@@ -179,15 +196,17 @@ class PurePursuit:
         return vx, vy, heading
 
 
-def insert_trapezoidal_waypoints(waypoints, acceleration, deceleration):
+def insert_trapezoidal_waypoints(
+    waypoints: Sequence[Waypoint], acceleration: float, deceleration: float
+) -> List[Waypoint]:
     """Generate how far you have to travel to accelerate and decelerate for speed control.
 
     Assumes that the robot should accelerate then cruise when v_init < v_final,
     otherwise we cruise then decelerate.
 
     Args:
-        acceleration = acceleration when increasing speed
-        deceleration = acceleration when decreasing speed
+        acceleration: acceleration when increasing speed
+        deceleration: acceleration when decreasing speed
     """
     trap_waypoints = []
     for idx in range(len(waypoints) - 1):
