@@ -28,8 +28,6 @@ class Aligner(StateMachine):
         self.last_vision = 0
 
     alignment_speed = tunable(1.0)  # m/s
-    target_tape_kP_x = tunable(0.75)  # forwards
-    target_tape_kP_y = tunable(0.75)  # m/s
 
     @state(first=True)
     def wait_for_vision(self):
