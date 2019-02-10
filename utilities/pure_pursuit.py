@@ -71,32 +71,30 @@ class PurePursuit:
 
         d_x = x_2 - x_1
         d_y = y_2 - y_1
-        d_r = math.sqrt(d_x ** 2 + d_y ** 2)
+        d_r = math.hypot(d_x, d_y)
         D = x_1 * y_2 - x_2 * y_1
         r = self.speed_look_ahead
         discriminent = r ** 2 * d_r ** 2 - D ** 2
 
         if discriminent >= 0:  # if an intersection exists
-            intersection_1 = np.zeros((2))
-            intersection_2 = np.zeros((2))
             sqrt_discriminent = math.sqrt(discriminent)
 
             right_x = self.sgn(d_y) * d_x * sqrt_discriminent
             left_x = D * d_y
             right_y = abs(d_y) * sqrt_discriminent
-            left_y = -1 * D * d_x
+            left_y = -D * d_x
             denominator = d_r ** 2
             if denominator == 0:
                 print("Pursuit: caught division by zero")
                 return
-            intersection_1[0] = (left_x + right_x) / denominator
-            intersection_1[1] = (left_y + right_y) / denominator
+            intersection_1 = np.array((left_x + right_x, left_y + right_y))
+            intersection_1 /= denominator
             if discriminent == 0:  # if we are tangent to our path
                 return intersection_1
-            intersection_2[0] = (left_x - right_x) / denominator
-            intersection_2[1] = (left_y - right_y) / denominator
-            if np.linalg.norm((intersection_1) - (segment_end)) < np.linalg.norm(
-                (intersection_2) - (segment_end)
+            intersection_2 = np.array((left_x - right_x, left_y - right_y))
+            intersection_2 /= denominator
+            if np.linalg.norm(intersection_1 - segment_end) < np.linalg.norm(
+                intersection_2 - segment_end
             ):
                 return intersection_1
             else:
@@ -144,7 +142,7 @@ class PurePursuit:
             # use the next waypoint as our goal point
             goal_point = segment_end[:2]
         # print(goal_point)
-        goal_point = goal_point / np.linalg.norm(goal_point)
+        goal_point /= np.linalg.norm(goal_point)
         return goal_point
 
     @staticmethod
@@ -167,7 +165,6 @@ class PurePursuit:
         )
         self.last_robot_x = robot_x
         self.last_robot_y = robot_y
-        # print(self.distance_traveled)
         return self.distance_traveled
 
     def find_speed(
