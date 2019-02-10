@@ -134,7 +134,8 @@ class SwerveModule:
             sp - self.steer_enc_offset
         ) / self.STEER_COUNTS_PER_RADIAN
 
-    def nt_offset_changed(self, entry, key, value, param):
+    def nt_offset_changed(self, entry, key: str, value: float, flags: int):
+        value = int(value)
         self.steer_enc_offset = value
         self.steer_motor.configSetCustomParam(value, 0, timeoutMs=10)
 
