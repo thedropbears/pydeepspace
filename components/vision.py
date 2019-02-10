@@ -76,7 +76,7 @@ class Vision:
         # Use the previous heading - that's where we were when the picture was taken
         heading = previous[2]
         robot_x = x * math.cos(heading) + y * math.sin(heading)
-        robot_y = -y * math.sin(heading) + y * math.cos(heading)
+        robot_y = -x * math.sin(heading) + y * math.cos(heading)
         return robot_x, robot_y, current[2] - heading
 
     def ping(self):
