@@ -228,6 +228,8 @@ class Robot(magicbot.MagicRobot):
             )
 
     def testPeriodic(self):
+        self.vision.execute()  # Keep the time offset calcs running
+
         joystick_vx = -rescale_js(
             self.joystick.getY(), deadzone=0.1, exponential=1.5, rate=0.5
         )
