@@ -58,7 +58,7 @@ class Vision:
             x = self.fiducial_x - vision_delta_x
             y = self.fiducial_y - vision_delta_y
             return x, y, vision_delta_heading
-        return None, None, None
+        return None
 
     def _get_pose_delta(self, t):
         """Search the stored odometry and return the position difference between now and the specified time."""
