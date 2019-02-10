@@ -20,6 +20,7 @@ class Vision:
     raspi_pong_time = ntproperty("/vision/raspi_pong", 0.0, writeDefault=False)
     rio_pong_time = ntproperty("/vision/rio_pong", 0.0, writeDefault=False)
     latency = ntproperty("/vision/clock_offset", 0.0)
+    processing_time = ntproperty("/vision/processing_time", 0.0)
     # NOTE: x and y are relative to the robot co-ordinate system, not the camera
 
     def __init__(self):
@@ -48,6 +49,7 @@ class Vision:
     def get_fiducial_position(self):
         """Return the position of the retroreflective fiducials relative to the current robot pose."""
         vision_time = self.fiducial_time + self.latency
+        self.processing_time = time.monotonic() - vision_time
         if self.fiducial_in_sight:  # Only return if not too stale
             vision_delta_x, vision_delta_y, vision_delta_heading = self._get_pose_delta(
                 vision_time
