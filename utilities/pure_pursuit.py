@@ -1,14 +1,32 @@
 import math
-from typing import List, Optional, Sequence, Tuple
+from typing import List, NamedTuple, Optional, Sequence, Tuple
 
 import numpy as np
 
 #: A point in 2D cartesian space.
 Cartesian2D = Tuple[float, float]
-#: x, y, theta, speed
-Waypoint = Tuple[float, float, float, float]
-#: A Waypoint with an additional cumulative distance.
-Segment = Tuple[float, float, float, float, float]
+
+
+class Waypoint(NamedTuple):
+    """A waypoint to feed into PurePursuit.build_path."""
+
+    x: float
+    y: float
+    #: Desired robot heading
+    theta: float
+    #: Desired velocity
+    v: float
+
+
+class Segment(NamedTuple):
+    """A Waypoint with an additional cumulative displacement."""
+
+    x: float
+    y: float
+    theta: float
+    v: float
+    #: Cumulative displacement
+    s: float
 
 
 class PurePursuit:
@@ -42,8 +60,8 @@ class PurePursuit:
         http://mathworld.wolfram.com/Circle-LineIntersection.html
         NOTE: this will return the intersections in global co-ordinates
         """
-        x_1, y_1 = waypoint_start[0], waypoint_start[1]
-        x_2, y_2 = waypoint_end[0], waypoint_end[1]
+        x_1, y_1 = waypoint_start.x, waypoint_start.y
+        x_2, y_2 = waypoint_end.x, waypoint_end.y
         robot_x, robot_y = robot_position
         x_2 -= robot_x
         x_1 -= robot_x
@@ -94,8 +112,8 @@ class PurePursuit:
         create waypoints with these co-ordinates and distance
         along the path from the start of the trajectory.
         """
-        self.last_robot_x = waypoints[0][0]
-        self.last_robot_y = waypoints[0][1]
+        self.last_robot_x = waypoints[0].x
+        self.last_robot_y = waypoints[0].y
         self.completed_path = False
         self.distance_traveled = 0
         self.waypoints = []
@@ -105,10 +123,10 @@ class PurePursuit:
             x, y, theta, speed = waypoint
             # print(waypoint)
             waypoint_distance += math.hypot(
-                x - previous_waypoint[0], y - previous_waypoint[1]
+                x - previous_waypoint.x, y - previous_waypoint.y
             )
             previous_waypoint = waypoint
-            self.waypoints.append((x, y, theta, speed, waypoint_distance))
+            self.waypoints.append(Segment(x, y, theta, speed, waypoint_distance))
         self.current_waypoint_number = 0
         print(f"waypoints = {self.waypoints}")
 
@@ -187,9 +205,9 @@ class PurePursuit:
             start_distance, end_distance, start_speed, end_speed, distance_along_path
         )
         vx, vy = direction * speed
-        heading = segment_end[2]
+        heading = segment_end.theta
         self.speed_look_ahead = self.look_ahead + self.look_ahead_speed_modifier * speed
-        if self.distance_traveled + self.speed_look_ahead >= segment_end[4]:
+        if self.distance_traveled + self.speed_look_ahead >= end_distance:
             # if we have reached the end of our current segment
             self.current_waypoint_number += 1
             print("changed segment")
@@ -209,16 +227,13 @@ def insert_trapezoidal_waypoints(
         deceleration: acceleration when decreasing speed
     """
     trap_waypoints = []
-    for idx in range(len(waypoints) - 1):
-        segment_start = waypoints[idx]
-        segment_end = waypoints[idx + 1]
-
-        dx = segment_end[0] - segment_start[0]
-        dy = segment_end[1] - segment_start[1]
+    for segment_start, segment_end in zip(waypoints, waypoints[1:]):
+        dx = segment_end.x - segment_start.x
+        dy = segment_end.y - segment_start.y
 
         segment_distance = math.hypot(dx, dy)
-        u = segment_start[3]
-        v = segment_end[3]
+        u = segment_start.v
+        v = segment_end.v
 
         trap_waypoints.append(segment_start)
         if v > u:
@@ -230,10 +245,11 @@ def insert_trapezoidal_waypoints(
                 # Cannot actually get to speed in time
                 # Leave the segments as they are
                 continue
-            intermediate = (
-                dx * s / segment_distance + segment_start[0],
-                dy * s / segment_distance + segment_start[1],
-            ) + segment_end[2:]
+            intermediate = Waypoint(
+                dx * s / segment_distance + segment_start.x,
+                dy * s / segment_distance + segment_start.y,
+                *segment_end[2:],
+            )
             trap_waypoints.append(intermediate)
 
         elif u > v:
@@ -244,10 +260,11 @@ def insert_trapezoidal_waypoints(
                 # Not enough time to decelerate
                 # Leave the segments as they are
                 continue
-            intermediate = (
+            intermediate = Waypoint(
                 dx * s / segment_distance + segment_start[0],
                 dy * s / segment_distance + segment_start[1],
-            ) + segment_start[2:]
+                *segment_start[2:],
+            )
             trap_waypoints.append(intermediate)
 
     trap_waypoints.append(waypoints[-1])

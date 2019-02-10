@@ -11,7 +11,7 @@ from utilities.pure_pursuit import PurePursuit, Waypoint, insert_trapezoidal_way
 
 
 def reflect_y(v: Waypoint) -> Waypoint:
-    return (v[0], -v[1], v[2], v[3])
+    return Waypoint(v.x, -v.y, v.theta, v.v)
 
 
 class AutoBase(AutonomousStateMachine):
@@ -30,17 +30,16 @@ class AutoBase(AutonomousStateMachine):
 
     def __init__(self):
         super().__init__()
-        self.front_cargo_bay = (5.6 - SwerveChassis.LENGTH / 2, 0.2, 0, 0.75)
-        self.setup_loading_bay = (3.3, 3.3, math.pi, 2)
-        self.loading_bay = (0.2 + SwerveChassis.LENGTH / 2, 3.4, math.pi, 1)
-        self.side_cargo_bay = (7, 0.8 + SwerveChassis.WIDTH / 2, -math.pi / 2, 1)
-        self.side_cargo_bay_alignment_point = (
-            7,
-            1.8 + SwerveChassis.WIDTH / 2,
-            -math.pi / 2,
-            0.75,
+        self.front_cargo_bay = Waypoint(5.6 - SwerveChassis.LENGTH / 2, 0.2, 0, 0.75)
+        self.setup_loading_bay = Waypoint(3.3, 3.3, math.pi, 2)
+        self.loading_bay = Waypoint(0.2 + SwerveChassis.LENGTH / 2, 3.4, math.pi, 1)
+        self.side_cargo_bay = Waypoint(
+            7, 0.8 + SwerveChassis.WIDTH / 2, -math.pi / 2, 1
         )
-        self.start_pos = (
+        self.side_cargo_bay_alignment_point = Waypoint(
+            7, 1.8 + SwerveChassis.WIDTH / 2, -math.pi / 2, 0.75
+        )
+        self.start_pos = Waypoint(
             1.2 + SwerveChassis.LENGTH / 2,
             0,
             0,
@@ -111,7 +110,7 @@ class AutoBase(AutonomousStateMachine):
                 waypoints = insert_trapezoidal_waypoints(
                     (
                         self.current_pos,
-                        (
+                        Waypoint(
                             self.current_pos[0] - 0.5,
                             self.current_pos[1],
                             self.imu.getAngle(),
@@ -153,11 +152,8 @@ class AutoBase(AutonomousStateMachine):
 
     @property
     def current_pos(self):
-        return (
-            self.chassis.odometry_x,
-            self.chassis.odometry_y,
-            self.imu.getAngle(),
-            2,
+        return Waypoint(
+            self.chassis.odometry_x, self.chassis.odometry_y, self.imu.getAngle(), 2
         )
 
     def follow_path(self):
@@ -166,8 +162,7 @@ class AutoBase(AutonomousStateMachine):
             self.chassis.set_inputs(0, 0, 0, field_oriented=False)
             return
         # TODO implement a system to allow for rotation in waypoints
-        self.chassis.set_heading_sp(heading)
-        self.chassis.set_inputs(vx, vy, 0)
+        self.chassis.set_velocity_heading(vx, vy, heading)
 
     def ready_for_vision(self):
         if self.pursuit.waypoints[-1][4] - self.pursuit.distance_traveled < 1:
