@@ -32,7 +32,7 @@ class PurePursuit:
         """
         x_1, y_1 = waypoint_start[0], waypoint_start[1]
         x_2, y_2 = waypoint_end[0], waypoint_end[1]
-        robot_x, robot_y, _, __ = robot_position
+        robot_x, robot_y = robot_position
         x_2 -= robot_x
         x_1 -= robot_x
         y_2 -= robot_y
@@ -126,7 +126,7 @@ class PurePursuit:
         Every timestep, add the distance the robot has travelled to a
         running total used to check for waypoints.
         """
-        robot_x, robot_y, _, __ = robot_position
+        robot_x, robot_y = robot_position
         self.distance_traveled += math.hypot(
             robot_x - self.last_robot_x, robot_y - self.last_robot_y
         )

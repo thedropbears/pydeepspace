@@ -161,7 +161,7 @@ class AutoBase(AutonomousStateMachine):
         )
 
     def follow_path(self):
-        vx, vy, heading = self.pursuit.find_velocity(self.current_pos)
+        vx, vy, heading = self.pursuit.find_velocity(self.chassis.position)
         if self.pursuit.completed_path:
             self.chassis.set_inputs(0, 0, 0, field_oriented=False)
             return
