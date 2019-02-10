@@ -27,6 +27,7 @@ class Vision:
         self.latency = 0.0
         self.last_pong = time.monotonic()
         self.odometry = deque(maxlen=50 * 2)  # 50Hz control loop for 2 secs
+        NetworkTables.setUpdateRate(1)  # ensure our flush calls flush immediately
 
     def execute(self):
         """Store the current odometry in the queue. Allows projection of target into current position."""
