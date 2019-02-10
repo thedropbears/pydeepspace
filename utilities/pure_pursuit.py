@@ -86,7 +86,7 @@ class PurePursuit:
             denominator = dr ** 2
             if denominator == 0:
                 print("Pursuit: caught division by zero")
-                return
+                return None
             intersection_1 = np.array((left_x + right_x, left_y + right_y))
             intersection_1 /= denominator
             if delta == 0:  # if we are tangent to our path
@@ -101,6 +101,7 @@ class PurePursuit:
                 return intersection_2
         else:
             print("No intersection found")
+            return None
 
     def build_path(self, waypoints: Sequence[Waypoint]) -> None:
         """
