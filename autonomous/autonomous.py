@@ -7,7 +7,7 @@ from components.hatch import Hatch
 from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
 from utilities.navx import NavX
-from utilities.pure_pursuit import PurePursuit
+from utilities.pure_pursuit import PurePursuit, insert_trapezoidal_waypoints
 
 
 def reflect_2d_y(v: tuple) -> tuple:
@@ -30,17 +30,15 @@ class AutoBase(AutonomousStateMachine):
 
     def __init__(self):
         super().__init__()
-        self.front_cargo_bay = (5.6 - SwerveChassis.LENGTH / 2, 0.2, 0, 1)
-        self.front_cargo_bay_slowdown = (4.6 - SwerveChassis.LENGTH / 2, 0.2, 0, 2)
+        self.front_cargo_bay = (5.6 - SwerveChassis.LENGTH / 2, 0.2, 0, 0.75)
         self.setup_loading_bay = (3.3, 3.3, math.pi, 2)
         self.loading_bay = (0.2 + SwerveChassis.LENGTH / 2, 3.4, math.pi, 1)
-        self.loading_bay_speedup_point = (1 + SwerveChassis.LENGTH / 2, 3.4, math.pi, 2)
         self.side_cargo_bay = (7, 0.8 + SwerveChassis.WIDTH / 2, -math.pi / 2, 1)
-        self.side_cargo_bay_slowdown_point = (
+        self.side_cargo_bay_alignment_point = (
             7,
             1.8 + SwerveChassis.WIDTH / 2,
             -math.pi / 2,
-            2,
+            0.75,
         )
         self.start_pos = (
             1.2 + SwerveChassis.LENGTH / 2,
@@ -54,6 +52,9 @@ class AutoBase(AutonomousStateMachine):
         self.desired_angle = 0
         self.desired_angle_navx = 0
         self.minimum_path_completion = 0.85
+
+        self.acceleration = 1
+        self.deceleration = -0.5
 
         self.pursuit = PurePursuit(look_ahead=0.2, look_ahead_speed_modifier=0.25)
 
@@ -69,24 +70,26 @@ class AutoBase(AutonomousStateMachine):
         if initial_call:
             # print(f"odometry = {self.current_pos}")
             if self.completed_runs == 0:
-                self.pursuit.build_path(
-                    (
-                        self.current_pos,
-                        self.front_cargo_bay_slowdown,
-                        self.front_cargo_bay,
-                    )
+                waypoints = insert_trapezoidal_waypoints(
+                    (self.current_pos, self.front_cargo_bay),
+                    self.acceleration,
+                    self.deceleration,
                 )
             elif self.completed_runs == 1:
-                self.pursuit.build_path(
+                waypoints = insert_trapezoidal_waypoints(
                     (
                         self.current_pos,
-                        self.loading_bay_speedup_point,
-                        self.side_cargo_bay_slowdown_point,
+                        self.side_cargo_bay_alignment_point,
                         self.side_cargo_bay,
-                    )
+                    ),
+                    self.acceleration,
+                    self.deceleration,
                 )
-        if self.pursuit.completed_path and self.completed_runs > 3:
-            self.next_state("stop")
+            else:
+                self.next_state("drive_to_loading_bay")
+                self.completed_runs += 1
+                return
+            self.pursuit.build_path(waypoints)
         self.follow_path()
         if (
             not math.isnan(self.vision.target_tape_error) and self.ready_for_vision()
@@ -105,7 +108,7 @@ class AutoBase(AutonomousStateMachine):
     def drive_to_loading_bay(self, initial_call):
         if initial_call:
             if self.completed_runs == 1:
-                self.pursuit.build_path(
+                waypoints = insert_trapezoidal_waypoints(
                     (
                         self.current_pos,
                         (
@@ -116,14 +119,20 @@ class AutoBase(AutonomousStateMachine):
                         ),
                         self.setup_loading_bay,
                         self.loading_bay,
-                    )
+                    ),
+                    self.acceleration,
+                    self.deceleration,
                 )
             elif self.completed_runs == 2:
-                self.pursuit.build_path(
-                    (self.current_pos, self.setup_loading_bay, self.loading_bay)
+                waypoints = insert_trapezoidal_waypoints(
+                    (self.current_pos, self.setup_loading_bay, self.loading_bay),
+                    self.acceleration,
+                    self.deceleration,
                 )
-            elif self.completed_runs == 3:
+            else:
                 self.next_state("stop")
+                return
+            self.pursuit.build_path(waypoints)
         self.follow_path()
         if (
             not math.isnan(self.vision.target_tape_error) and self.ready_for_vision()
@@ -161,9 +170,7 @@ class AutoBase(AutonomousStateMachine):
         self.chassis.set_inputs(vx, vy, 0)
 
     def ready_for_vision(self):
-        if (self.pursuit.waypoints[-1][4] - self.pursuit.distance_traveled < 1) and (
-            self.pursuit.current_waypoint_number > len(self.pursuit.waypoints) - 1
-        ):
+        if self.pursuit.waypoints[-1][4] - self.pursuit.distance_traveled < 1:
             return True
         else:
             return False

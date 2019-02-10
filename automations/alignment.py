@@ -28,7 +28,7 @@ class Aligner(StateMachine):
         self.last_vision = 0
 
     target_tape_kP_x = tunable(0.75)  # forwards
-    target_tape_kP_y = tunable(1.2)  # m/s
+    target_tape_kP_y = tunable(0.75)  # m/s
 
     @state(first=True)
     def wait_for_vision(self):
@@ -48,7 +48,7 @@ class Aligner(StateMachine):
             self.last_vision = state_tm
         error = self.vision.target_tape_error
         if math.isnan(error):
-            self.chassis.set_inputs(1, 0, 0, field_oriented=False)
+            self.chassis.set_inputs(0.75, 0, 0, field_oriented=False)
             if state_tm - self.last_vision > 0.5:
                 self.chassis.set_inputs(0, 0, 0)
                 self.next_state("success")
@@ -69,8 +69,9 @@ class HatchDepositAligner(Aligner):
     hatch: Hatch
 
     @state(must_finish=True)
-    def success(self, state_tm):
-        self.hatch.punch()
+    def success(self, state_tm, initial_call):
+        if initial_call:
+            self.hatch.punch()
         if state_tm > 1:
             self.done()
 

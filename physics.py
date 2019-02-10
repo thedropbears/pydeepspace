@@ -9,8 +9,8 @@ from utilities.functions import constrain_angle
 
 class PhysicsEngine:
 
-    X_WHEELBASE = 0.50
-    Y_WHEELBASE = 0.62
+    X_WHEELBASE = 0.2625 * 2
+    Y_WHEELBASE = 0.2165 * 2
     GRAVITY = 9.8
 
     def __init__(self, controller):

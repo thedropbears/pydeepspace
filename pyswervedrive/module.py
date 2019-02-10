@@ -220,8 +220,8 @@ class SwerveModule:
             delta = constrain_angle(desired_azimuth - self.measured_azimuth)
         else:
             # figure out the most efficient way to get the module to the desired direction
-            # current_unwound_azimuth = self.measured_azimuth
-            current_unwound_azimuth = constrain_angle(self.current_azimuth_sp)
+            current_unwound_azimuth = self.measured_azimuth
+            # current_unwound_azimuth = constrain_angle(self.current_azimuth_sp)
             delta = self.min_angular_displacement(
                 current_unwound_azimuth, desired_azimuth
             )
@@ -230,13 +230,12 @@ class SwerveModule:
         # control on the Talon SRXs themselves.
         # Please note, this is *NOT WRAPPED* to +-pi, because if wrapped the module
         # will unwind
-        azimuth_to_set = self.current_azimuth_sp + delta
+        azimuth_to_set = self.measured_azimuth + delta
         # convert the direction to encoder counts to set as the closed-loop setpoint
         self.setpoint = (
             azimuth_to_set * self.STEER_COUNTS_PER_RADIAN + self.steer_enc_offset
         )
         self.steer_motor.set(ctre.ControlMode.Position, self.setpoint)
-        self.current_azimuth_sp = azimuth_to_set
 
         if not absolute_rotation:
             # logic to only move the modules when we are close to the corret angle
