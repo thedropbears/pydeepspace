@@ -1,7 +1,8 @@
 from magicbot.state_machine import AutonomousStateMachine, state
-from utilities.pure_pursuit import PurePursuit
+
 from pyswervedrive.chassis import SwerveChassis
 from utilities.navx import NavX
+from utilities.pure_pursuit import PurePursuit
 
 
 class TestPursuitAuto(AutonomousStateMachine):
@@ -22,10 +23,7 @@ class TestPursuitAuto(AutonomousStateMachine):
     def move_forwards(self, initial_call):
         if initial_call:
             self.pursuit.build_path(self.points)
-        heading = self.imu.getAngle()
-        x, y = self.chassis.position
-        position = (x, y, heading)
-        vx, vy, vz = self.pursuit.find_velocity(position)
+        vx, vy, vz = self.pursuit.find_velocity(self.chassis.position)
         self.chassis.set_inputs(vx, vy, 0)
         if self.pursuit.completed_path:
             self.chassis.set_inputs(0, 0, 0)
