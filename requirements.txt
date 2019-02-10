@@ -1,5 +1,5 @@
 pyfrc ~= 2019.0
-robotpy-ctre ~= 2019.0
+robotpy-ctre ~= 2019.1.2
 robotpy-navx ~= 2019.0
 robotpy-rev
 wpilib-controller
