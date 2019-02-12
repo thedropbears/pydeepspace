@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import enum
 import math
 
 import ctre
@@ -23,6 +24,23 @@ from pyswervedrive.chassis import SwerveChassis
 from pyswervedrive.module import SwerveModule
 from utilities.functions import constrain_angle, rescale_js
 from utilities.navx import NavX
+
+ROCKET_ANGLE = 0.52  # measured field angle
+
+
+class FieldAngle(enum.Enum):
+    CARGO_FRONT = 0
+    CARGO_RIGHT = math.pi / 2
+    CARGO_LEFT = -math.pi / 2
+    LOADING_STATION = math.pi
+    ROCKET_LEFT_FRONT = ROCKET_ANGLE
+    ROCKET_RIGHT_FRONT = -ROCKET_ANGLE
+    ROCKET_LEFT_BACK = math.pi - ROCKET_ANGLE
+    ROCKET_RIGHT_BACK = -math.pi + ROCKET_ANGLE
+
+    @classmethod
+    def closest(cls, robot_heading: float) -> "FieldAngle":
+        return min(cls, key=lambda a: abs(constrain_angle(robot_heading - a.value)))
 
 
 class Robot(magicbot.MagicRobot):
@@ -51,17 +69,6 @@ class Robot(magicbot.MagicRobot):
     vision: Vision
 
     offset_rotation_rate = 20
-
-    field_angles = {
-        "cargo front": 0,
-        "cargo right": math.pi / 2,
-        "cargo left": -math.pi / 2,
-        "loading station": math.pi,
-        "rocket left front": 0.52,  # measured field angle
-        "rocket right front": -0.52,
-        "rocket left back": math.pi - 0.52,
-        "rocket right back": -math.pi + 0.52,
-    }
 
     def createObjects(self):
         """Create motors and stuff here."""
@@ -188,16 +195,16 @@ class Robot(magicbot.MagicRobot):
             self.hatch.punch()
 
         if self.joystick.getTrigger():
-            label = self.closest_field_angle(self.imu.getAngle())
-            self.logger.info(label)
-            if label == "loading station":
+            angle = FieldAngle.closest(self.imu.getAngle())
+            self.logger.info("closest field angle: %s", angle)
+            if angle is FieldAngle.LOADING_STATION:
                 self.hatch_intake.engage()
             else:
                 self.hatch_deposit.engage()
-            self.chassis.set_heading_sp(self.field_angles[label])
+            self.chassis.set_heading_sp(angle.value)
 
         if self.joystick.getRawButton(2):
-            self.chassis.set_heading_sp(self.field_angles["loading station"])
+            self.chassis.set_heading_sp(FieldAngle.LOADING_STATION.value)
             self.hatch_intake.engage()
 
         if self.joystick.getRawButtonPressed(5):
@@ -260,13 +267,6 @@ class Robot(magicbot.MagicRobot):
                 module.steer_motor.set(
                     ctre.ControlMode.Position, module.steer_enc_offset
                 )
-
-    def closest_field_angle(self, robot_heading):
-        label, _ = min(
-            self.field_angles.items(),
-            key=lambda a: abs(constrain_angle(robot_heading - a[1])),
-        )
-        return label
 
 
 if __name__ == "__main__":
