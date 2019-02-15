@@ -1,4 +1,4 @@
-pyfrc ~= 2019.0
+pyfrc ~= 2019.0.6
 robotpy-ctre ~= 2019.1.2
 robotpy-navx ~= 2019.0
 robotpy-rev
