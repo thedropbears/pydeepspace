@@ -50,13 +50,6 @@ class SwerveModule:
 
         self.name = name
 
-        self.nt = NetworkTables.getTable("SwerveDrive").getSubTable(name)
-        self.steer_enc_offset_entry = self.nt.getEntry("steer_enc_offset")
-        self.steer_enc_offset_entry.setDefaultDouble(0)
-        self.steer_enc_offset_entry.addListener(
-            self.nt_offset_changed, NetworkTables.NotifyFlags.UPDATE
-        )
-
         self.steer_motor = steer_talon
         self.drive_motor = drive_talon
         self.x_pos = x_pos
@@ -68,10 +61,17 @@ class SwerveModule:
         self.reverse_drive_direction = reverse_drive_direction
         self.reverse_drive_encoder = reverse_drive_encoder
 
-        self.aligned = False
-        self.last_speed = 0
-
         self.steer_enc_offset = self.steer_motor.configGetCustomParam(0, timoutMs=10)
+
+        self.nt = NetworkTables.getTable("SwerveDrive").getSubTable(name)
+        self.steer_enc_offset_entry = self.nt.getEntry("steer_enc_offset")
+        self.steer_enc_offset_entry.setDouble(self.steer_enc_offset)
+        self.steer_enc_offset_entry.addListener(
+            self.nt_offset_changed, NetworkTables.NotifyFlags.UPDATE
+        )
+
+        self.aligned = False
+        self.last_speed = 0.0
 
         self.update_odometry()
 
