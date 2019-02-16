@@ -2,6 +2,7 @@
 import enum
 import math
 
+import rev
 import ctre
 import magicbot
 import wpilib
@@ -116,11 +117,14 @@ class Robot(magicbot.MagicRobot):
         self.hatch_left_limit_switch = wpilib.DigitalInput(2)
         self.hatch_right_limit_switch = wpilib.DigitalInput(3)
 
-        self.climber_front_motor = ctre.TalonSRX(21)
-        self.climber_back_motor = ctre.TalonSRX(22)
+        self.climber_front_motor = rev.CANSparkMax(10, rev.MotorType.kBrushless)
+        self.climber_back_motor = rev.CANSparkMax(11, rev.MotorType.kBrushless)
         self.climber_front_podium_switch = wpilib.DigitalInput(4)
         self.climber_back_podium_switch = wpilib.DigitalInput(5)
         self.climber_drive_motor = ctre.TalonSRX(20)
+        self.climber_solenoid = wpilib.DoubleSolenoid(
+            forwardChannel=4, reverseChannel=5
+        )
 
         # cargo related objects
         self.intake_motor = ctre.TalonSRX(9)
