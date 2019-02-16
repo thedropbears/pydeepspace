@@ -106,17 +106,14 @@ class Climber:
     def extend_back(self):
         self.back_direction = -1
 
-    def is_front_at_set_pos(self):
-        if self.front_direction == 1:
-            return self.front_lift.forward_limit_switch.get()
-        elif self.front_direction == -1:
-            return self.front_lift.reverse_limit_switch.get()
+    def is_both_extended(self):
+        return self.front_lift.reverse_limit_switch.get()
 
-    def is_back_at_set_pos(self):
-        if self.back_direction == 1:
-            return self.back_lift.forward_limit_switch.get()
-        elif self.back_direction == -1:
-            return self.front_lift.reverse_limit_switch.get()
+    def is_front_retracted(self):
+        return self.front_lift.forward_limit_switch.get()
+
+    def is_back_retracted(self):
+        return self.back_lift.forward_limit_switch.get()
 
     def is_front_touching_podium(self):
         return self.front_podium_switch.get()

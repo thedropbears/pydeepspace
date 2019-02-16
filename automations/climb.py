@@ -23,7 +23,7 @@ class ClimbAutomation(StateMachine):
 
         self.chassis.set_inputs(0, 0.001, 0, field_oriented=False)
 
-        if self.climber.is_front_at_set_pos() and self.climber.is_back_at_set_pos():
+        if self.climber.is_both_extended():
             self.climber.stop_all()
             self.next_state_now("align_front_lift")
 
@@ -39,7 +39,7 @@ class ClimbAutomation(StateMachine):
     def retract_front_lift(self, initial_call):
         if initial_call:
             self.climber.retract_front()
-        if self.climber.is_front_at_set_pos():
+        if self.climber.is_front_retracted():
             self.climber.stop_front()
             self.next_state_now("align_back_lift")
 
@@ -59,7 +59,7 @@ class ClimbAutomation(StateMachine):
     def retract_back_lift(self, initial_call):
         if initial_call:
             self.climber.retract_back()
-        if self.climber.is_back_at_set_pos():
+        if self.climber.is_back_retracted():
             self.climber.stop_back()
             self.climber.stop_wheels()
             self.done()
