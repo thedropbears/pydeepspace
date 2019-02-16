@@ -90,7 +90,7 @@ class SwerveModule:
         self.steer_motor.setInverted(self.reverse_steer_direction)
         # self.steer_motor.setSelectedSensorPosition(0)
 
-        self.steer_motor.config_kP(0, 2.5, 10)
+        self.steer_motor.config_kP(0, 1, 10)
         self.steer_motor.config_kI(0, 0.0, 10)
         self.steer_motor.config_kD(0, 0.0, 10)
         self.steer_motor.selectProfileSlot(0, 0)
