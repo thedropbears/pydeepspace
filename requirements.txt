@@ -4,6 +4,7 @@ robotpy-navx ~= 2019.0
 robotpy-rev
 wpilib-controller
 numpy ~= 1.15
+dataclasses; python_version < '3.7'
 
 coverage
 pyflakes
