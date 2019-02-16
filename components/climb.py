@@ -1,4 +1,3 @@
-# import rev
 import math
 import wpilib
 import wpilib_controller
@@ -185,9 +184,6 @@ class Climber:
             self.front_lift.motor.set(0)
             self.back_lift.motor.set(0)
 
-            self.front_lift.motor.stopMotor()
-            self.back_lift.motor.stopMotor()
-
         if self.drive_wheels:
             self.drive_motor.set(ctre.ControlMode.PercentOutput, self.DRIVE_SPEED)
         else:
@@ -197,8 +193,6 @@ class Climber:
         self.stop_all()
         self.front_lift.motor.set(0)
         self.back_lift.motor.set(0)
-        self.front_lift.motor.stopMotor()
-        self.back_lift.motor.stopMotor()
 
     def on_enable(self):
         self.retract_solenoid()
