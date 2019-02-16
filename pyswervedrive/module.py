@@ -289,4 +289,4 @@ class SwerveModule:
         self.drive_motor.setNeutralMode(ctre.NeutralMode.Coast)
 
     def set_drive_brake(self):
-        self.drive_motor.setNeutralMode(ctre.NeutralMode.Coast)
+        self.drive_motor.setNeutralMode(ctre.NeutralMode.Brake)
