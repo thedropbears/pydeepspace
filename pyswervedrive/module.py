@@ -284,3 +284,9 @@ class SwerveModule:
         if abs(diff) < abs(opp_diff):
             return diff
         return opp_diff
+
+    def set_drive_coast(self):
+        self.drive_motor.setNeutralMode(ctre.NeutralMode.Coast)
+
+    def set_drive_brake(self):
+        self.drive_motor.setNeutralMode(ctre.NeutralMode.Coast)

@@ -277,3 +277,11 @@ class SwerveChassis:
     @property
     def all_aligned(self):
         return all(module.aligned for module in self.modules)
+
+    def set_modules_drive_coast(self):
+        for module in self.modules:
+            module.set_drive_coast()
+
+    def set_modules_drive_brake(self):
+        for module in self.modules:
+            module.set_drive_brake()
