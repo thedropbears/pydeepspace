@@ -9,8 +9,8 @@ import wpilib
 from networktables import NetworkTables
 
 from automations.alignment import (
+    Aligner,
     HatchDepositAligner,
-    HatchIntakeAligner,
     CargoDepositAligner,
 )
 from automations.cargo import CargoManager
@@ -53,7 +53,7 @@ class Robot(magicbot.MagicRobot):
     cargo_deposit: CargoDepositAligner
     climb_automation: ClimbAutomation
     hatch_deposit: HatchDepositAligner
-    hatch_intake: HatchIntakeAligner
+    hatch_intake: Aligner
 
     # Actuators
     arm: Arm
@@ -124,9 +124,8 @@ class Robot(magicbot.MagicRobot):
         self.hatch_left_puncher = wpilib.Solenoid(1)
         self.hatch_right_puncher = wpilib.Solenoid(2)
 
-        self.hatch_top_limit_switch = wpilib.DigitalInput(1)
-        self.hatch_left_limit_switch = wpilib.DigitalInput(2)
-        self.hatch_right_limit_switch = wpilib.DigitalInput(3)
+        self.hatch_left_limit_switch = wpilib.DigitalInput(8)
+        self.hatch_right_limit_switch = wpilib.DigitalInput(9)
 
         self.climber_front_motor = rev.CANSparkMax(10, rev.MotorType.kBrushless)
         self.climber_back_motor = rev.CANSparkMax(11, rev.MotorType.kBrushless)
