@@ -233,7 +233,8 @@ class SwerveModule:
         # control on the Talon SRXs themselves.
         # Please note, this is *NOT WRAPPED* to +-pi, because if wrapped the module
         # will unwind
-        azimuth_to_set = self.measured_azimuth + delta
+        self.read_steer_pos()
+        azimuth_to_set = self.current_azimuth_sp + delta
         # convert the direction to encoder counts to set as the closed-loop setpoint
         self.setpoint = (
             azimuth_to_set * self.STEER_COUNTS_PER_RADIAN + self.steer_enc_offset
