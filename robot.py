@@ -9,7 +9,7 @@ import wpilib
 from networktables import NetworkTables
 
 from automations.alignment import (
-    Aligner,
+    HatchIntakeAligner,
     HatchDepositAligner,
     CargoDepositAligner,
 )
@@ -53,7 +53,7 @@ class Robot(magicbot.MagicRobot):
     cargo_deposit: CargoDepositAligner
     climb_automation: ClimbAutomation
     hatch_deposit: HatchDepositAligner
-    hatch_intake: Aligner
+    hatch_intake: HatchIntakeAligner
 
     # Actuators
     arm: Arm

@@ -2,7 +2,7 @@ import math
 
 from magicbot.state_machine import AutonomousStateMachine, state
 
-from automations.alignment import HatchDepositAligner, Aligner
+from automations.alignment import HatchDepositAligner, HatchIntakeAligner
 from components.hatch import Hatch
 from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
@@ -18,7 +18,7 @@ class AutoBase(AutonomousStateMachine):
 
     # Here magicbot injects components
     hatch_deposit: HatchDepositAligner
-    hatch_intake: Aligner
+    hatch_intake: HatchIntakeAligner
 
     chassis: SwerveChassis
     hatch: Hatch
