@@ -86,15 +86,3 @@ class CargoDepositAligner(Aligner):
     def success(self):
         self.intake.deposit()
         self.done()
-
-
-class HatchIntakeAligner(Aligner):
-
-    VERBOSE_LOGGING = True
-    hatch: Hatch
-    # TODO delete this once limit switches are working
-
-    @state(must_finish=True)
-    def success(self):
-        self.hatch.has_hatch = True
-        self.done()
