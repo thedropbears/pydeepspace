@@ -191,6 +191,8 @@ class SwerveChassis:
 
         self.odometry_updated = True
 
+        self.set_modules_drive_brake()
+
     def robot_movement_from_odometry(self, odometry_outputs, angle, z_vel=0):
         lstsq_ret = np.linalg.lstsq(self.A, odometry_outputs, rcond=None)
         x, y, theta = lstsq_ret[0].reshape(3)
