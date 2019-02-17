@@ -12,7 +12,7 @@ class Hatch:
     hatch_bottom_puncher: wpilib.Solenoid
     hatch_left_puncher: wpilib.Solenoid
     hatch_right_puncher: wpilib.Solenoid
-    
+
     left_limit_switch: wpilib.DigitalInput
     right_limit_switch: wpilib.DigitalInput
 
@@ -22,7 +22,7 @@ class Hatch:
 
     def on_enable(self):
         self._punch_on = False
-        self.has_hatch = True
+        self.has_hatch = False
         self.clear_to_retract = False
         self.fired_position = 0, 0
         self.loop_counter = 0
@@ -61,8 +61,5 @@ class Hatch:
 
     def is_contained(self):
         return any(
-            [
-                not self.left_limit_switch.get(),
-                not self.right_limit_switch.get(),
-            ]
+            [not self.left_limit_switch.get(), not self.right_limit_switch.get()]
         )
