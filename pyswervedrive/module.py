@@ -40,7 +40,7 @@ class SwerveModule:
         y_pos: float,
         reverse_steer_direction: bool = False,
         reverse_steer_encoder: bool = True,
-        reverse_drive_direction: bool = True,
+        reverse_drive_direction: bool = False,
         reverse_drive_encoder: bool = False,
     ):
         if hal.isSimulation():
