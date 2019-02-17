@@ -32,7 +32,7 @@ class Climber:
     front_direction = 0
     back_direction = 0
 
-    DRIVE_SPEED = 0.5
+    DRIVE_SPEED = 0.4
     drive_wheels = False
 
     TOTAL_ROTATIONS = -230
