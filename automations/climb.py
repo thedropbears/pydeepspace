@@ -14,6 +14,8 @@ class ClimbAutomation(StateMachine):
     def done(self):
         super().done()
         self.chassis.set_modules_drive_brake()
+        self.chassis.enable_modules_drive()
+        self.climber.stop_all()
 
     @state(first=True, must_finish=True)
     def extend_both_lifts(self, initial_call, state_tm):
@@ -21,8 +23,10 @@ class ClimbAutomation(StateMachine):
 
         if initial_call:
             self.climber.extend_all()
+
             self.chassis.set_modules_drive_coast()
             self.chassis.heading_hold_off()
+            self.chassis.disable_modules_drive()
 
         if self.climber.is_both_extended():
             self.climber.stop_all()

@@ -73,6 +73,8 @@ class SwerveModule:
         self.aligned = False
         self.last_speed = 0.0
 
+        self.disable_drive = False
+
         self.update_odometry()
 
         # NOTE: In all the following config* calls to the drive and steer
@@ -238,30 +240,34 @@ class SwerveModule:
         )
         self.steer_motor.set(ctre.ControlMode.Position, self.setpoint)
 
-        if not absolute_rotation:
-            # logic to only move the modules when we are close to the corret angle
-            azimuth_error = constrain_angle(self.measured_azimuth - desired_azimuth)
-            if abs(azimuth_error) < math.pi / 3.0:
-                # if we are nearing the correct angle with the module forwards
+        if not self.disable_drive:
+            if not absolute_rotation:
+                # logic to only move the modules when we are close to the corret angle
+                azimuth_error = constrain_angle(self.measured_azimuth - desired_azimuth)
+                if abs(azimuth_error) < math.pi / 3.0:
+                    # if we are nearing the correct angle with the module forwards
+                    self.drive_motor.set(
+                        ctre.ControlMode.Velocity,
+                        speed * self.drive_velocity_to_native_units,
+                    )
+                    self.aligned = True
+                elif abs(azimuth_error) > math.tau / 3.0:
+                    # if we are nearing the correct angle with the module backwards
+                    self.drive_motor.set(
+                        ctre.ControlMode.Velocity,
+                        -speed * self.drive_velocity_to_native_units,
+                    )
+                    self.aligned = True
+                else:
+                    self.drive_motor.set(ctre.ControlMode.Velocity, 0)
+                    self.aligned = False
+            else:
                 self.drive_motor.set(
                     ctre.ControlMode.Velocity,
                     speed * self.drive_velocity_to_native_units,
                 )
-                self.aligned = True
-            elif abs(azimuth_error) > math.tau / 3.0:
-                # if we are nearing the correct angle with the module backwards
-                self.drive_motor.set(
-                    ctre.ControlMode.Velocity,
-                    -speed * self.drive_velocity_to_native_units,
-                )
-                self.aligned = True
-            else:
-                self.drive_motor.set(ctre.ControlMode.Velocity, 0)
-                self.aligned = False
         else:
-            self.drive_motor.set(
-                ctre.ControlMode.Velocity, speed * self.drive_velocity_to_native_units
-            )
+            self.drive_motor.neutralOutput()
 
     def update_odometry(self):
         drive_pos = self.drive_motor.getSelectedSensorPosition(0)

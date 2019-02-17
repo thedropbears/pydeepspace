@@ -287,3 +287,11 @@ class SwerveChassis:
     def set_modules_drive_brake(self):
         for module in self.modules:
             module.set_drive_brake()
+
+    def disable_modules_drive(self):
+        for module in self.modules:
+            module.disable_drive = True
+
+    def enable_modules_drive(self):
+        for module in self.modules:
+            module.disable_drive = False
