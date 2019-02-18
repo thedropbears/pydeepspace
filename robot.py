@@ -148,7 +148,7 @@ class Robot(magicbot.MagicRobot):
         """Allow the drivers to control the robot."""
         # self.chassis.heading_hold_off()
 
-        throttle = (1 - self.joystick.getThrottle()) / 2
+        throttle = max(0.1, (1 - self.joystick.getThrottle()) / 2)  # min 10%
         self.sd.putNumber("joy_throttle", throttle)
 
         # this is where the joystick inputs get converted to numbers that are sent
