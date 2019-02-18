@@ -70,7 +70,6 @@ class SwerveModule:
             self.nt_offset_changed, NetworkTables.NotifyFlags.UPDATE
         )
 
-        self.aligned = False
         self.last_speed = 0.0
 
         self.update_odometry()

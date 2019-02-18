@@ -171,24 +171,25 @@ class Robot(magicbot.MagicRobot):
         self.sd.putNumber("joy_vy", joystick_vy)
         self.sd.putNumber("joy_vz", joystick_vz)
 
-        if joystick_vx or joystick_vy or joystick_vz:
-            self.chassis.set_inputs(
-                joystick_vx,
-                joystick_vy,
-                joystick_vz,
-                field_oriented=not self.joystick.getRawButton(6),
-            )
-        else:
-            self.chassis.set_inputs(0, 0, 0)
-
-        if joystick_hat != -1:
-            if self.intake.has_cargo:
-                constrained_angle = -constrain_angle(
-                    math.radians(joystick_hat) + math.pi
+        if not self.chassis.automation_running:
+            if joystick_vx or joystick_vy or joystick_vz:
+                self.chassis.set_inputs(
+                    joystick_vx,
+                    joystick_vy,
+                    joystick_vz,
+                    field_oriented=not self.joystick.getRawButton(6),
                 )
             else:
-                constrained_angle = -constrain_angle(math.radians(joystick_hat))
-            self.chassis.set_heading_sp(constrained_angle)
+                self.chassis.set_inputs(0, 0, 0)
+
+            if joystick_hat != -1:
+                if self.intake.has_cargo:
+                    constrained_angle = -constrain_angle(
+                        math.radians(joystick_hat) + math.pi
+                    )
+                else:
+                    constrained_angle = -constrain_angle(math.radians(joystick_hat))
+                self.chassis.set_heading_sp(constrained_angle)
 
         if self.joystick.getRawButtonPressed(4):
             self.hatch.punch()

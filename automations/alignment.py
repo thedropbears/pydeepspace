@@ -42,12 +42,14 @@ class Aligner(StateMachine):
         """
         Align with the objective using the vision tape above the objective.
 
-        The robot will try to correct errors untill they are within tolerance
+        The robot will try to correct errors until they are within tolerance
         by strafing and moving in a hyberbolic curve towards the target.
         """
         if initial_call:
             self.successful = False
             self.last_vision = state_tm
+            self.chassis.automation_running = True
+
         if (self.vision.fiducial_x < 0.1) or not self.vision.fiducial_in_sight:
             self.chassis.set_inputs(self.alignment_speed, 0, 0, field_oriented=False)
             if state_tm - self.last_vision > 0.5:
@@ -69,6 +71,10 @@ class Aligner(StateMachine):
     @state(must_finish=True)
     def success(self):
         self.done()
+
+    def done(self):
+        super().done()
+        self.chassis.automation_running = False
 
 
 class HatchDepositAligner(Aligner):

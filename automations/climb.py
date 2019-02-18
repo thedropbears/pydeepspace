@@ -16,7 +16,7 @@ class ClimbAutomation(StateMachine):
     def done(self):
         super().done()
         self.chassis.set_modules_drive_brake()
-        self.chassis.enable_modules_drive()
+        self.chassis.automation_running = False
         self.climber.stop_all()
 
     @state(first=True, must_finish=True)
@@ -28,7 +28,7 @@ class ClimbAutomation(StateMachine):
 
             self.chassis.set_modules_drive_coast()
             self.chassis.heading_hold_off()
-            self.chassis.disable_modules_drive()
+            self.chassis.automation_running = True
 
             self.arm.move_to(Height.LOADING_STATION)
 
@@ -83,4 +83,4 @@ class ClimbAutomation(StateMachine):
             self.done()
 
     def move_swerves(self):
-        self.chassis.set_inputs(0, 0.1, 0, field_oriented=False)
+        self.chassis.set_inputs(0, 0.05, 0, field_oriented=False)
