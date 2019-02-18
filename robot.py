@@ -14,7 +14,7 @@ from automations.alignment import (
     CargoDepositAligner,
 )
 from automations.cargo import CargoManager
-from components.cargo import Arm, Intake
+from components.cargo import CargoManipulator
 from components.hatch import Hatch
 from automations.climb import ClimbAutomation
 from components.vision import Vision
@@ -56,10 +56,9 @@ class Robot(magicbot.MagicRobot):
     hatch_intake: HatchIntakeAligner
 
     # Actuators
-    arm: Arm
+    cargo_component: CargoManipulator
     chassis: SwerveChassis
     hatch: Hatch
-    intake: Intake
 
     climber: Climber
 
@@ -126,8 +125,9 @@ class Robot(magicbot.MagicRobot):
         )
 
         # cargo related objects
-        self.intake_motor = ctre.TalonSRX(9)
+        self.intake_motor = ctre.VictorSPX(9)
         self.intake_switch = wpilib.DigitalInput(0)
+        self.arm_motor = rev.CANSparkMax(2, rev.MotorType.kBrushless)
 
         # boilerplate setup for the joystick
         self.joystick = wpilib.Joystick(0)
@@ -226,6 +226,16 @@ class Robot(magicbot.MagicRobot):
             self.climb_automation.start_climb_lv3()
         if self.gamepad.getBackButtonPressed():
             self.climb_automation.done()
+
+        if self.gamepad.getAButtonPressed():
+            self.cargo.intake_floor(force=True)
+        if self.gamepad.getYButtonPressed():
+            self.cargo.intake_loading(force=True)
+        if (
+            self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0
+            or self.gamepad.getTriggerAxis(self.gamepad.Hand.kRight) > 0
+        ):
+            self.cargo.outake_cargo_ship(force=True)
 
     def robotPeriodic(self):
         super().robotPeriodic()

@@ -1,44 +1,114 @@
 import enum
+import math
 
 import ctre
+import rev
 import wpilib
-
-
-class Intake:
-
-    motor: ctre.TalonSRX
-    intake_switch: wpilib.DigitalInput
-
-    def __init__(self):
-        self.motor_output = 0
-        self.has_cargo = False
-
-    def execute(self):
-        self.motor.set(ctre.ControlMode.PercentOutput, self.motor_output)
-        if not self.intake_switch.get():
-            self.has_cargo = True
-
-    def intake(self):
-        self.motor_output = -1
-
-    def outtake(self):
-        self.motor_output = 1
-        self.has_cargo = False
-
-    def stop(self):
-        self.motor_output = 0
+import wpilib_controller
 
 
 class Height(enum.Enum):
-    FLOOR = 0
-    ROCKET_SHIP = 42
-    CARGO_SHIP = 42
-    LOADING_STATION = 42
+    FLOOR = 18.8
+    CARGO_SHIP = 0
+    LOADING_STATION = 0
 
 
-class Arm:
-    def execute(self):
-        pass
+class CargoManipulator:
 
-    def move_to(self, height: Height):
-        pass
+    arm_motor: rev.CANSparkMax
+    intake_motor: ctre.VictorSPX
+
+    intake_switch: wpilib.DigitalInput
+
+    GEAR_RATIO = 49 * 84 / 50
+    COUNTS_PER_REV = 1
+    COUNTS_PER_RADIAN = 20 / math.radians(105)  # measured counts
+
+    INTAKE_SPEED = -0.75
+    OUTTAKE_SPEED = 1
+
+    def __init__(self):
+        self.intake_motor_output = 0
+
+    def setup(self) -> None:
+        self.arm_motor.setIdleMode(rev.IdleMode.kBrake)
+        self.arm_motor.setInverted(False)
+
+        self.encoder = self.arm_motor.getEncoder()
+        self.pid_controller = wpilib_controller.PIDController(
+            Kp=0.028,
+            Ki=0.0,
+            Kd=0.0,
+            measurement_source=self.encoder.getPosition,
+            period=1 / 50,
+        )
+        self.pid_controller.setOutputRange(-1, 1)
+
+        self.top_limit_switch = self.arm_motor.getReverseLimitSwitch(
+            rev.LimitSwitchPolarity.kNormallyOpen
+        )
+        self.bottom_limit_switch = self.arm_motor.getForwardLimitSwitch(
+            rev.LimitSwitchPolarity.kNormallyOpen
+        )
+
+        self.setpoint = Height.LOADING_STATION.value
+        self.tolerance = 0.1
+        self.has_cargo = False
+
+        wpilib.SmartDashboard.putData("cargo_pid", self.pid_controller)
+
+    def execute(self) -> None:
+        wpilib.SmartDashboard.putBoolean("top_switch", self.top_limit_switch.get())
+        wpilib.SmartDashboard.putBoolean(
+            "bottom_switch", self.bottom_limit_switch.get()
+        )
+        wpilib.SmartDashboard.putBoolean("intake_switch", self.intake_switch.get())
+
+        self.intake_motor.set(ctre.ControlMode.PercentOutput, self.intake_motor_output)
+
+        self.pid_controller.setReference(self.setpoint)
+        output = self.pid_controller.update()
+        self.arm_motor.set(output)
+
+        if self.is_contained():
+            self.has_cargo = True
+
+        if self.top_limit_switch.get():
+            self.encoder.setPosition(Height.LOADING_STATION.value)
+        if self.bottom_limit_switch.get():
+            self.encoder.setPosition(Height.FLOOR.value)
+
+    def at_height(self, desired_height) -> bool:
+        return abs(desired_height.value - self.encoder.getPosition()) <= self.tolerance
+
+    @classmethod
+    def counts_per_rad(cls, angle) -> float:
+        return angle * cls.COUNTS_PER_RADIAN
+
+    def move_to(self, height: Height) -> None:
+        """Move arm to specified height.
+
+        Args:
+            height: Height to move arm to
+        """
+        self.setpoint = height.value
+
+    def on_disable(self) -> None:
+        self.intake_motor.set(ctre.ControlMode.PercentOutput, 0)
+        self.arm_motor.set(0)
+
+    def on_enable(self) -> None:
+        self.setpoint = self.encoder.getPosition()
+
+    def intake(self) -> None:
+        self.intake_motor_output = self.INTAKE_SPEED
+
+    def outtake(self) -> None:
+        self.has_cargo = False
+        self.intake_motor_output = self.OUTTAKE_SPEED
+
+    def stop(self) -> None:
+        self.intake_motor_output = 0
+
+    def is_contained(self) -> bool:
+        return self.intake_switch.get()

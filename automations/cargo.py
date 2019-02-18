@@ -1,63 +1,52 @@
 from magicbot import StateMachine, state
 
-from components.cargo import Arm, Intake
+from components.cargo import CargoManipulator, Height
 
 
 class CargoManager(StateMachine):
 
-    arm: Arm
-    intake: Intake
-
-    def __init__(self):
-        super().__init__()
-        self.override = False
+    cargo_component: CargoManipulator
 
     def intake_floor(self, force=False):
         self.engage(initial_state="move_to_floor", force=force)
 
     @state(first=True, must_finish=True)
-    def move_to_floor(self):
-        self.next_state("intaking_cargo")
+    def move_to_floor(self, initial_call, state_tm):
+        self.cargo_component.move_to(Height.FLOOR)
+        if self.cargo_component.at_height(Height.FLOOR):
+            self.next_state("intaking_cargo")
 
-    def intake_depot(self, force=False):
-        self.engage(initial_state="move_to_depot", force=force)
+    def outake_cargo_ship(self, force=False):
+        self.engage(initial_state="move_to_cargo_ship", force=force)
 
-    @state
-    def move_to_depot(self):
-        self.next_state("intaking_cargo")
+    @state(must_finish=True)
+    def move_to_cargo_ship(self, initial_call, state_tm):
+        self.cargo_component.move_to(Height.CARGO_SHIP)
+        if self.cargo_component.at_height(Height.CARGO_SHIP):
+            self.next_state("outtaking_cargo")
 
     def intake_loading(self, force=False):
         self.engage(initial_state="move_to_loading_station", force=force)
 
-    @state
-    def move_to_loading_station(self):
-        self.next_state("intaking_cargo")
+    @state(must_finish=True)
+    def move_to_loading_station(self, initial_call, state_tm):
+        self.cargo_component.move_to(Height.LOADING_STATION)
+        if self.cargo_component.at_height(Height.LOADING_STATION):
+            self.next_state("intaking_cargo")
 
     @state(must_finish=True)
     def intaking_cargo(self):
-        if self.intake.contained():
-            self.intake.stop()
+        if self.cargo_component.is_contained():
+            self.cargo_component.stop()
             self.done()
         else:
-            self.intake.intake()
-
-    def start_outtake(self, force=False):
-        self.engage(initial_state="outtaking_cargo", force=force)
+            self.cargo_component.intake()
 
     @state(must_finish=True)
-    def outtaking_cargo(self, initial_call):
-        if not self.override:
-            # if initial_call:
-            #     self.align.align()
-            # if not self.align.is_executing:
-            #     if self.align.successful:
-            #         self.intake.outtake()
-            # else:
-            # self.done()
-            pass
-        else:
-            self.intake.outtake()
+    def outtaking_cargo(self, initial_call, state_tm):
+        if initial_call:
+            self.cargo_component.outtake()
 
-        if not self.intake.contained():
-            self.intake.stop()
+        if state_tm > 0.5:
+            self.cargo_component.stop()
             self.done()
