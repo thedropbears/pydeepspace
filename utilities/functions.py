@@ -32,6 +32,7 @@ def constrain_angle(angle: float) -> float:
     """Wrap an angle to the interval [-pi, pi]."""
     return math.atan2(math.sin(angle), math.cos(angle))
 
+
 def rotate_vector(x: float, y: float, angle: float) -> (float, float):
     """Rotate a vector by the specified angle."""
     x_prime = x * math.cos(angle) - y * math.sin(angle)
