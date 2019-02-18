@@ -1,7 +1,7 @@
 import math
 import time
 
-from collections import deque
+from collections import deque, namedtuple
 
 from networktables import NetworkTables
 from networktables.util import ntproperty
@@ -9,6 +9,9 @@ from networktables.util import ntproperty
 from pyswervedrive.chassis import SwerveChassis
 
 from utilities.functions import rotate_vector
+
+
+Odometry = namedtuple("Odometry", "x, y, heading, t")
 
 class Vision:
 
@@ -33,7 +36,7 @@ class Vision:
     def execute(self):
         """Store the current odometry in the queue. Allows projection of target into current position."""
         self.odometry.appendleft(
-            (
+            Odometry(
                 self.chassis.odometry_x,
                 self.chassis.odometry_y,
                 self.chassis.imu.getAngle(),
@@ -66,18 +69,18 @@ class Vision:
         current = self.odometry[0]
         previous = self.odometry[0]
         for odom in self.odometry:
-            if odom[3] > t:
+            if odom.t >= t:
                 previous = odom
             else:
                 break
 
-        x = current[0] - previous[0]
-        y = current[1] - previous[1]
+        x = current.x - previous.x
+        y = current.y - previous.y
         # Rotate to the robot frame of reference
         # Use the previous heading - that's where we were when the picture was taken
-        heading = previous[2]
+        heading = previous.heading
         robot_x, robot_y = rotate_vector(x, y, heading)
-        return robot_x, robot_y, current[2] - heading
+        return robot_x, robot_y, current.heading - heading
 
     def ping(self):
         """Send a ping to the RasPi to determine the connection latency."""
