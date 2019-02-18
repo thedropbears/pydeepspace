@@ -52,8 +52,7 @@ class ClimbAutomation(StateMachine):
 
         if initial_call:
             self.climber.retract_front()
-        if self.climber.is_front_retracted():
-            self.climber.stop_front()
+        if self.climber.is_front_above_ground_level():
             self.next_state_now("align_back_lift")
 
     @state(must_finish=True)

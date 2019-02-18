@@ -36,8 +36,8 @@ class Climber:
     drive_wheels = False
 
     HEIGHT_PER_REV = 0.002
+    GROUND_CLEARANCE = -0.05
 
-    SLOW_DOWN_THRESHOLD = -(0.05 / HEIGHT_PER_REV)
     SLOW_DOWN_SPEED = 0.15
 
     def setup(self):
@@ -112,6 +112,12 @@ class Climber:
     def is_front_retracted(self):
         return self.front_lift.forward_limit_switch.get()
 
+    def is_front_above_ground_level(self):
+        return self.front_lift.encoder.getPosition() > GROUND_CLEARANCE / HEIGHT_PER_REV
+
+    def is_back_above_ground_level(self):
+        return self.back_lift.encoder.getPosition() > GROUND_CLEARANCE / HEIGHT_PER_REV
+
     def is_back_retracted(self):
         return self.back_lift.forward_limit_switch.get()
 
@@ -168,7 +174,7 @@ class Climber:
         elif self.front_direction > 0:
             output = self.LIFT_SPEED
 
-            if self.front_lift.encoder.getPosition() > self.SLOW_DOWN_THRESHOLD:
+            if self.is_front_above_ground_level():
                 self.front_lift.motor.set(self.SLOW_DOWN_SPEED)
             else:
                 self.front_lift.motor.set(output)
@@ -179,7 +185,7 @@ class Climber:
         elif self.back_direction > 0:
             output = self.LIFT_SPEED
 
-            if self.back_lift.encoder.getPosition() > self.SLOW_DOWN_THRESHOLD:
+            if self.is_back_above_ground_level():
                 self.back_lift.motor.set(self.SLOW_DOWN_SPEED)
             else:
                 self.back_lift.motor.set(output)
