@@ -171,6 +171,12 @@ class Robot(magicbot.MagicRobot):
         self.sd.putNumber("joy_vy", joystick_vy)
         self.sd.putNumber("joy_vz", joystick_vz)
 
+        # Allow big stick movements from the driver to break out of an automation
+        if abs(joystick_vx) > 0.5 or abs(joystick_vy) > 0.5:
+            self.hatch_intake.done()
+            self.hatch_deposit.done()
+            self.cargo_deposit.done()
+
         if not self.chassis.automation_running:
             if joystick_vx or joystick_vy or joystick_vz:
                 self.chassis.set_inputs(
