@@ -13,13 +13,16 @@ class Hatch:
     hatch_left_puncher: wpilib.Solenoid
     hatch_right_puncher: wpilib.Solenoid
 
-    top_limit_switch: wpilib.DigitalInput
     left_limit_switch: wpilib.DigitalInput
     right_limit_switch: wpilib.DigitalInput
 
+    def setup(self):
+        wpilib.SmartDashboard.putData("hatch_left_switch", self.left_limit_switch)
+        wpilib.SmartDashboard.putData("hatch_right_switch", self.right_limit_switch)
+        self.has_hatch = False
+
     def on_enable(self):
         self._punch_on = False
-        self.has_hatch = True
         self.clear_to_retract = False
         self.fired_position = 0, 0
         self.loop_counter = 0
@@ -58,9 +61,5 @@ class Hatch:
 
     def is_contained(self):
         return any(
-            [
-                not self.top_limit_switch.get(),
-                not self.left_limit_switch.get(),
-                not self.right_limit_switch.get(),
-            ]
+            [not self.left_limit_switch.get(), not self.right_limit_switch.get()]
         )
