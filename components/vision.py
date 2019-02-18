@@ -1,4 +1,3 @@
-import math
 import time
 
 from collections import deque
@@ -7,6 +6,17 @@ from networktables import NetworkTables
 from networktables.util import ntproperty
 
 from pyswervedrive.chassis import SwerveChassis
+
+from typing import NamedTuple
+
+from utilities.functions import rotate_vector
+
+
+class Odometry(NamedTuple):
+    x: float
+    y: float
+    heading: float
+    t: float
 
 
 class Vision:
@@ -32,7 +42,7 @@ class Vision:
     def execute(self):
         """Store the current odometry in the queue. Allows projection of target into current position."""
         self.odometry.appendleft(
-            (
+            Odometry(
                 self.chassis.odometry_x,
                 self.chassis.odometry_y,
                 self.chassis.imu.getAngle(),
@@ -41,6 +51,8 @@ class Vision:
         )
         self.ping()
         self.pong()
+        vision_time = self.fiducial_time + self.latency
+        self.processing_time = time.monotonic() - vision_time
         NetworkTables.flush()
 
     @property
@@ -50,34 +62,30 @@ class Vision:
     def get_fiducial_position(self):
         """Return the position of the retroreflective fiducials relative to the current robot pose."""
         vision_time = self.fiducial_time + self.latency
-        self.processing_time = time.monotonic() - vision_time
-        if self.fiducial_in_sight:  # Only return if not too stale
-            vision_delta_x, vision_delta_y, vision_delta_heading = self._get_pose_delta(
-                vision_time
-            )
-            x = self.fiducial_x - vision_delta_x
-            y = self.fiducial_y - vision_delta_y
-            return x, y, vision_delta_heading
-        return None
+        vision_delta_x, vision_delta_y, vision_delta_heading = self._get_pose_delta(
+            vision_time
+        )
+        x = self.fiducial_x - vision_delta_x
+        y = self.fiducial_y - vision_delta_y
+        return x, y, vision_delta_heading
 
     def _get_pose_delta(self, t):
         """Search the stored odometry and return the position difference between now and the specified time."""
         current = self.odometry[0]
         previous = self.odometry[0]
         for odom in self.odometry:
-            if odom[3] > t:
+            if odom.t >= t:
                 previous = odom
             else:
                 break
 
-        x = current[0] - previous[0]
-        y = current[1] - previous[1]
+        x = current.x - previous.x
+        y = current.y - previous.y
         # Rotate to the robot frame of reference
         # Use the previous heading - that's where we were when the picture was taken
-        heading = previous[2]
-        robot_x = x * math.cos(heading) + y * math.sin(heading)
-        robot_y = -x * math.sin(heading) + y * math.cos(heading)
-        return robot_x, robot_y, current[2] - heading
+        heading = previous.heading
+        robot_x, robot_y = rotate_vector(x, y, -heading)
+        return robot_x, robot_y, current.heading - heading
 
     def ping(self):
         """Send a ping to the RasPi to determine the connection latency."""
