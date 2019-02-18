@@ -1,5 +1,3 @@
-import enum
-
 from magicbot import tunable
 from magicbot.state_machine import StateMachine, state
 

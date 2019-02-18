@@ -113,10 +113,16 @@ class Climber:
         return self.front_lift.forward_limit_switch.get()
 
     def is_front_above_ground_level(self):
-        return self.front_lift.encoder.getPosition() > GROUND_CLEARANCE / HEIGHT_PER_REV
+        return (
+            self.front_lift.encoder.getPosition()
+            > self.GROUND_CLEARANCE / self.HEIGHT_PER_REV
+        )
 
     def is_back_above_ground_level(self):
-        return self.back_lift.encoder.getPosition() > GROUND_CLEARANCE / HEIGHT_PER_REV
+        return (
+            self.back_lift.encoder.getPosition()
+            > self.GROUND_CLEARANCE / self.HEIGHT_PER_REV
+        )
 
     def is_back_retracted(self):
         return self.back_lift.forward_limit_switch.get()
