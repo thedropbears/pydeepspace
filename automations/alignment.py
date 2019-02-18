@@ -1,3 +1,5 @@
+import enum
+
 from magicbot import tunable
 from magicbot.state_machine import StateMachine, state
 
@@ -7,6 +9,11 @@ from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
 
 from utilities.functions import rotate_vector
+
+
+class Sides(enum.Enum):
+    FRONT = 1
+    BACK = -1
 
 
 class Aligner(StateMachine):
@@ -22,6 +29,7 @@ class Aligner(StateMachine):
 
     chassis: SwerveChassis
     vision: Vision
+    ROBOT_SIDE = Sides.FRONT
 
     def setup(self):
         self.successful = False
@@ -54,8 +62,8 @@ class Aligner(StateMachine):
         else:
             self.last_vision = state_tm
             fiducial_x, fiducial_y, delta_heading = self.vision.get_fiducial_position()
-            vx = self.alignment_speed
-            vy = fiducial_y * self.alignment_kp_y
+            vx = self.alignment_speed * self.ROBOT_SIDE.value
+            vy = fiducial_y * self.alignment_kp_y * self.ROBOT_SIDE.value
             vx, vy = rotate_vector(vx, vy, -delta_heading)
             self.chassis.set_inputs(vx, vy, 0, field_oriented=False)
 
@@ -68,6 +76,7 @@ class HatchDepositAligner(Aligner):
 
     VERBOSE_LOGGING = True
     hatch: Hatch
+    ROBOT_SIDE = Sides.FRONT
 
     @state(must_finish=True)
     def success(self, state_tm, initial_call):
@@ -81,6 +90,7 @@ class CargoDepositAligner(Aligner):
 
     VERBOSE_LOGGING = True
     intake: Intake
+    ROBOT_SIDE = Sides.BACK
 
     @state(must_finish=True)
     def success(self):
@@ -91,7 +101,7 @@ class CargoDepositAligner(Aligner):
 class HatchIntakeAligner(Aligner):
     VERBOSE_LOGGING = True
     hatch: Hatch
-    SIDE = 1
+    ROBOT_SIDE = Sides.BACK
 
     @state(must_finish=True)
     def target_tape_align(self, initial_call, state_tm):
@@ -116,9 +126,7 @@ class HatchIntakeAligner(Aligner):
         else:
             self.last_vision = state_tm
             fiducial_x, fiducial_y, delta_heading = self.vision.get_fiducial_position()
-            # Aim for a point in front of the fiducial
-            fiducial_x = fiducial_x / 3
-            norm = math.hypot(fiducial_x, fiducial_y)
-            vx = self.alignment_speed * fiducial_x / norm * self.SIDE
-            vy = self.alignment_speed * fiducial_y / norm * self.SIDE
+            vx = self.alignment_speed * self.ROBOT_SIDE.value
+            vy = fiducial_y * self.alignment_kp_y * self.ROBOT_SIDE.value
+            vx, vy = rotate_vector(vx, vy, -delta_heading)
             self.chassis.set_inputs(vx, vy, 0, field_oriented=False)
