@@ -67,17 +67,6 @@ class Robot(magicbot.MagicRobot):
 
     offset_rotation_rate = 20
 
-    field_angles = {
-        "cargo front": 0,
-        "cargo right": math.pi / 2,
-        "cargo left": -math.pi / 2,
-        "loading station": math.pi,
-        "rocket left front": 0.52,  # measured field angle
-        "rocket right front": -0.52,
-        "rocket left back": math.pi - 0.52,
-        "rocket right back": -math.pi + 0.52,
-    }
-
     def createObjects(self):
         """Create motors and stuff here."""
 
@@ -277,16 +266,6 @@ class Robot(magicbot.MagicRobot):
                 module.steer_motor.set(
                     ctre.ControlMode.Position, module.steer_enc_offset
                 )
-
-    def closest_field_angle(self, robot_heading):
-        lowest_distance = 2 * math.pi
-        lowest_label = None
-        for label, angle in self.field_angles.items():
-            diff = constrain_angle(constrain_angle(robot_heading) - angle)
-            if abs(diff) < lowest_distance:
-                lowest_distance = abs(diff)
-                lowest_label = label
-        return lowest_label
 
 
 if __name__ == "__main__":
