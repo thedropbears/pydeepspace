@@ -7,10 +7,16 @@ from networktables.util import ntproperty
 
 from pyswervedrive.chassis import SwerveChassis
 
+from typing import NamedTuple
+
 from utilities.functions import rotate_vector
 
 
-Odometry = namedtuple("Odometry", "x, y, heading, t")
+class Odometry(NamedTuple):
+    x: float
+    y: float
+    heading: float
+    t: float
 
 
 class Vision:

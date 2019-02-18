@@ -1,4 +1,5 @@
 import math
+import typing
 
 
 def rescale_js(
@@ -33,7 +34,7 @@ def constrain_angle(angle: float) -> float:
     return math.atan2(math.sin(angle), math.cos(angle))
 
 
-def rotate_vector(x: float, y: float, angle: float) -> (float, float):
+def rotate_vector(x: float, y: float, angle: float) -> typing.Tuple[float, float]:
     """Rotate a vector by the specified angle."""
     x_prime = x * math.cos(angle) - y * math.sin(angle)
     y_prime = x * math.sin(angle) + y * math.cos(angle)
