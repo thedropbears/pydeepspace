@@ -10,6 +10,7 @@ from pyswervedrive.chassis import SwerveChassis
 
 from utilities.functions import rotate_vector
 
+
 class Aligner(StateMachine):
     """
     A state machine for alignment using vision systems.
