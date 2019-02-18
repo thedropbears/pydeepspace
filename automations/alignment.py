@@ -8,6 +8,7 @@ from components.cargo import Intake
 from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
 
+from utilities.functions import rotate_vector
 
 class Aligner(StateMachine):
     """
@@ -28,6 +29,7 @@ class Aligner(StateMachine):
         self.last_vision = 0
 
     alignment_speed = tunable(1.0)  # m/s
+    alignment_kp_y = tunable(1.5)
 
     @state(first=True)
     def wait_for_vision(self):
@@ -53,11 +55,9 @@ class Aligner(StateMachine):
         else:
             self.last_vision = state_tm
             fiducial_x, fiducial_y, delta_heading = self.vision.get_fiducial_position()
-            # Aim for a point in front of the fiducial
-            fiducial_x = fiducial_x / 3
-            norm = math.hypot(fiducial_x, fiducial_y)
-            vx = self.alignment_speed * fiducial_x / norm
-            vy = self.alignment_speed * fiducial_y / norm
+            vx = self.alignment_speed
+            vy = fiducial_y * self.alignment_kp_y
+            vx, vy = rotate_vector(vx, vy, -delta_heading)
             self.chassis.set_inputs(vx, vy, 0, field_oriented=False)
 
     @state(must_finish=True)

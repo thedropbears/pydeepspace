@@ -8,6 +8,7 @@ from networktables.util import ntproperty
 
 from pyswervedrive.chassis import SwerveChassis
 
+from utilities.functions import rotate_vector
 
 class Vision:
 
@@ -75,8 +76,7 @@ class Vision:
         # Rotate to the robot frame of reference
         # Use the previous heading - that's where we were when the picture was taken
         heading = previous[2]
-        robot_x = x * math.cos(heading) + y * math.sin(heading)
-        robot_y = -x * math.sin(heading) + y * math.cos(heading)
+        robot_x, robot_y = rotate_vector(x, y, heading)
         return robot_x, robot_y, current[2] - heading
 
     def ping(self):
