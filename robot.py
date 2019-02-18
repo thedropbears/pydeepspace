@@ -280,6 +280,11 @@ class Robot(magicbot.MagicRobot):
                     ctre.ControlMode.Position, module.steer_enc_offset
                 )
 
+        if self.gamepad.getStartButtonPressed():
+            self.climber.retract_all()
+        if self.gamepad.getBackButtonPressed():
+            self.climber.stop_all()
+
 
 if __name__ == "__main__":
     wpilib.run(Robot)
