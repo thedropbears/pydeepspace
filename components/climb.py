@@ -35,8 +35,9 @@ class Climber:
     DRIVE_SPEED = 0.4
     drive_wheels = False
 
-    TOTAL_ROTATIONS = -230
-    SLOW_DOWN_THRESHOLD = TOTAL_ROTATIONS / 7
+    HEIGHT_PER_REV = 0.002
+
+    SLOW_DOWN_THRESHOLD = -(0.05 / HEIGHT_PER_REV)
     SLOW_DOWN_SPEED = 0.15
 
     def setup(self):
@@ -132,6 +133,10 @@ class Climber:
         self.stop_wheels()
 
     def execute(self):
+        for lift in self.lifts:
+            if lift.forward_limit_switch.get():
+                lift.encoder.setPosition(0)
+
         # Extend both
         if self.front_direction < 0 and self.back_direction < 0:
             pid_output = self.level_pid.update()  # * self.LIFT_SPEED
