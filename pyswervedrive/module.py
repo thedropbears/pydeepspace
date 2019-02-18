@@ -73,8 +73,6 @@ class SwerveModule:
         self.aligned = False
         self.last_speed = 0.0
 
-        self.disable_drive = False
-
         self.update_odometry()
 
         # NOTE: In all the following config* calls to the drive and steer
