@@ -56,14 +56,12 @@ class Vision:
         """Return the position of the retroreflective fiducials relative to the current robot pose."""
         vision_time = self.fiducial_time + self.latency
         self.processing_time = time.monotonic() - vision_time
-        if self.fiducial_in_sight:  # Only return if not too stale
-            vision_delta_x, vision_delta_y, vision_delta_heading = self._get_pose_delta(
-                vision_time
-            )
-            x = self.fiducial_x - vision_delta_x
-            y = self.fiducial_y - vision_delta_y
-            return x, y, vision_delta_heading
-        return None
+        vision_delta_x, vision_delta_y, vision_delta_heading = self._get_pose_delta(
+            vision_time
+        )
+        x = self.fiducial_x - vision_delta_x
+        y = self.fiducial_y - vision_delta_y
+        return x, y, vision_delta_heading
 
     def _get_pose_delta(self, t):
         """Search the stored odometry and return the position difference between now and the specified time."""
