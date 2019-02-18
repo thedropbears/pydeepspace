@@ -1,6 +1,6 @@
 import time
 
-from collections import deque, namedtuple
+from collections import deque
 
 from networktables import NetworkTables
 from networktables.util import ntproperty
