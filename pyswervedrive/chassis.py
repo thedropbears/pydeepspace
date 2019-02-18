@@ -67,28 +67,16 @@ class SwerveChassis:
 
         # figure out the contribution of the robot's overall rotation about the
         # z axis to each module's movement, and encode that information in a
-        # column vector
-        # self.z_axis_adjustment = np.zeros((8, 1))
-        # alphas = []
-        # ls = []
+
         for i, module in enumerate(self.modules):
             module_dist = math.hypot(module.x_pos, module.y_pos)
-            # alphas.append(module_dist)
             module_angle = math.atan2(module.y_pos, module.x_pos)
-            # ls.append(module_angle)
             # self.z_axis_adjustment[i*2, 0] = -module_dist*math.sin(module_angle)
             # self.z_axis_adjustment[i*2+1, 0] = module_dist*math.cos(module_angle)
             self.A[i * 2, 2] = -module_dist * math.sin(module_angle)
             self.A[i * 2 + 1, 2] = module_dist * math.cos(module_angle)
 
             module.reset_encoder_delta()
-            module.read_steer_pos()
-
-        # self.icre = ICREstimator(np.zeros(shape=(3, 1)), np.array(alphas),
-        #                          np.array(ls), np.zeros(shape=(4,)))
-
-        # TODO: re-enable if we end up not using callback method
-        self.imu.ahrs.registerCallback(self.update_odometry)
 
     def set_heading_sp_current(self):
         self.set_heading_sp(self.imu.getAngle())
@@ -135,7 +123,7 @@ class SwerveChassis:
         angle = self.imu.getAngle()
 
         # TODO: re-enable if we end up not using callback method
-        # self.update_odometry()
+        self.update_odometry()
         # self.odometry_updated = False  # reset for next timestep
 
         for module in self.modules:
@@ -149,7 +137,7 @@ class SwerveChassis:
                 vx, vy = self.vx, self.vy
             module.set_velocity(vx + vz_x, vy + vz_y)
 
-    def update_odometry(self, o, sensor_timestamp):
+    def update_odometry(self, *args):
         # TODO: re-enable if we end up not using callback method
         # if self.odometry_updated:
         #     return
