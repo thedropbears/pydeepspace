@@ -13,6 +13,7 @@ from utilities.functions import rotate_vector
 
 Odometry = namedtuple("Odometry", "x, y, heading, t")
 
+
 class Vision:
 
     chassis: SwerveChassis
@@ -79,7 +80,7 @@ class Vision:
         # Rotate to the robot frame of reference
         # Use the previous heading - that's where we were when the picture was taken
         heading = previous.heading
-        robot_x, robot_y = rotate_vector(x, y, heading)
+        robot_x, robot_y = rotate_vector(x, y, -heading)
         return robot_x, robot_y, current.heading - heading
 
     def ping(self):
