@@ -131,6 +131,7 @@ class Robot(magicbot.MagicRobot):
 
         # boilerplate setup for the joystick
         self.joystick = wpilib.Joystick(0)
+        self.gamepad = wpilib.XboxController(1)
 
         self.spin_rate = 2.5
 
@@ -213,6 +214,11 @@ class Robot(magicbot.MagicRobot):
                 self.chassis.heading_hold_off()
             else:
                 self.chassis.heading_hold_on()
+
+        if self.gamepad.getStartButtonPressed():
+            self.climb_automation.start_climb_lv3()
+        if self.gamepad.getBackButtonPressed():
+            self.climb_automation.done()
 
     def robotPeriodic(self):
         super().robotPeriodic()

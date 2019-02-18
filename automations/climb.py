@@ -1,5 +1,6 @@
 from magicbot import StateMachine, state
 from components.climb import Climber
+from components.cargo import Arm, Height
 from pyswervedrive.chassis import SwerveChassis
 
 
@@ -7,9 +8,10 @@ class ClimbAutomation(StateMachine):
 
     chassis: SwerveChassis
     climber: Climber
+    arm: Arm
 
-    def start_climb(self):
-        self.engage()
+    def start_climb_lv3(self):
+        self.engage(initial_state="extend_both_lifts_lv3")
 
     def done(self):
         super().done()
@@ -18,7 +20,7 @@ class ClimbAutomation(StateMachine):
         self.climber.stop_all()
 
     @state(first=True, must_finish=True)
-    def extend_both_lifts(self, initial_call, state_tm):
+    def extend_both_lifts_lv3(self, initial_call, state_tm):
         self.move_swerves()
 
         if initial_call:
@@ -27,6 +29,8 @@ class ClimbAutomation(StateMachine):
             self.chassis.set_modules_drive_coast()
             self.chassis.heading_hold_off()
             self.chassis.disable_modules_drive()
+
+            self.arm.move_to(Height.LOADING_STATION)
 
         if self.climber.is_both_extended():
             self.climber.stop_all()
