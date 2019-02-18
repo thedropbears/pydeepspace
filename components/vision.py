@@ -46,6 +46,8 @@ class Vision:
         )
         self.ping()
         self.pong()
+        vision_time = self.fiducial_time + self.latency
+        self.processing_time = time.monotonic() - vision_time
         NetworkTables.flush()
 
     @property
@@ -55,7 +57,6 @@ class Vision:
     def get_fiducial_position(self):
         """Return the position of the retroreflective fiducials relative to the current robot pose."""
         vision_time = self.fiducial_time + self.latency
-        self.processing_time = time.monotonic() - vision_time
         vision_delta_x, vision_delta_y, vision_delta_heading = self._get_pose_delta(
             vision_time
         )
