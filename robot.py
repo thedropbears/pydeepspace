@@ -234,7 +234,9 @@ class Robot(magicbot.MagicRobot):
             self.cargo.intake_floor(force=True)
         if self.gamepad.getYButtonPressed():
             self.cargo.intake_loading(force=True)
-            self.chassis.set_heading_sp(FieldAngle.CARGO_FRONT.value)  # Reversed side of robot
+            self.chassis.set_heading_sp(
+                FieldAngle.CARGO_FRONT.value
+            )  # Reversed side of robot
         if (
             self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0.5
             or self.gamepad.getTriggerAxis(self.gamepad.Hand.kRight) > 0.5
