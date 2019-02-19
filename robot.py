@@ -197,10 +197,12 @@ class Robot(magicbot.MagicRobot):
                     constrained_angle = -constrain_angle(math.radians(joystick_hat))
                 self.chassis.set_heading_sp(constrained_angle)
 
-        if self.joystick.getRawButtonPressed(4):
-            self.hatch.punch()
-
-        if self.joystick.getTrigger():
+        # Starts Hatch Alignment and Cargo State Machines
+        if (
+            self.joystick.getTrigger()
+            or self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0.5
+            or self.gamepad.getTriggerAxis(self.gamepad.Hand.kRight) > 0.5
+        ):
             angle = FieldAngle.closest(self.imu.getAngle())
             self.logger.info("closest field angle: %s", angle)
             if self.cargo_component.has_cargo:
@@ -212,21 +214,43 @@ class Robot(magicbot.MagicRobot):
                     self.hatch_deposit.engage()
             self.chassis.set_heading_sp(angle.value)
 
-        if self.joystick.getRawButton(2):
-            self.chassis.set_heading_sp(FieldAngle.LOADING_STATION.value)
-            self.hatch_intake.engage()
-
+        # Hatch Manual Fire/Retract
         if self.joystick.getRawButtonPressed(5):
+            self.hatch.punch()
             self.hatch.clear_to_retract = True
 
-        if self.joystick.getRawButtonPressed(3):
+        # Manual Retraction of both climb legs
+        if self.gamepad.getXButtonPressed():
+            self.climber.retract_all()
+
+        # Stops Cargo Intake Motor
+        if self.gamepad.getBackButtonPressed():
+            self.cargo_component.stop()
+
+        # Cargo Floor Intake
+        if self.gamepad.getAButtonPressed() or self.joystick.getRawButtonPressed(3):
+            self.cargo.intake_floor()
+
+        # Cargo Loading Station Intake
+        if self.gamepad.getYButtonPressed():
+            self.cargo.intake_loading()
+
+        # Toggles the Heading Hold
+        if self.joystick.getRawButtonPressed(8):
             if self.chassis.hold_heading:
                 self.chassis.heading_hold_off()
             else:
                 self.chassis.heading_hold_on()
 
+        # Resets the IMU's Heading
+        if self.joystick.getRawButtonPressed(7):
+            self.imu.resetHeading()
+
+        # Start Button starts Climb State Machine
         if self.gamepad.getStartButtonPressed():
             self.climb_automation.start_climb_lv3()
+
+        # Back Button Ends Climb State Machine
         if self.gamepad.getBackButtonPressed():
             self.climb_automation.done()
 
