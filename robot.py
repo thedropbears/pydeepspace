@@ -14,7 +14,7 @@ from automations.alignment import (
     CargoDepositAligner,
 )
 from automations.cargo import CargoManager
-from components.cargo import Arm, Intake
+from components.cargo import CargoManipulator
 from components.hatch import Hatch
 from automations.climb import ClimbAutomation
 from components.vision import Vision
@@ -56,10 +56,9 @@ class Robot(magicbot.MagicRobot):
     hatch_intake: HatchIntakeAligner
 
     # Actuators
-    arm: Arm
+    cargo_component: CargoManipulator
     chassis: SwerveChassis
     hatch: Hatch
-    intake: Intake
 
     climber: Climber
 
@@ -126,8 +125,9 @@ class Robot(magicbot.MagicRobot):
         )
 
         # cargo related objects
-        self.intake_motor = ctre.TalonSRX(9)
+        self.intake_motor = ctre.VictorSPX(9)
         self.intake_switch = wpilib.DigitalInput(0)
+        self.arm_motor = rev.CANSparkMax(2, rev.MotorType.kBrushless)
 
         # boilerplate setup for the joystick
         self.joystick = wpilib.Joystick(0)
@@ -189,7 +189,7 @@ class Robot(magicbot.MagicRobot):
                 self.chassis.set_inputs(0, 0, 0)
 
             if joystick_hat != -1:
-                if self.intake.has_cargo:
+                if self.cargo_component.has_cargo or self.cargo.is_executing:
                     constrained_angle = -constrain_angle(
                         math.radians(joystick_hat) + math.pi
                     )
@@ -203,10 +203,13 @@ class Robot(magicbot.MagicRobot):
         if self.joystick.getTrigger():
             angle = FieldAngle.closest(self.imu.getAngle())
             self.logger.info("closest field angle: %s", angle)
-            if angle is FieldAngle.LOADING_STATION:
-                self.hatch_intake.engage()
+            if self.cargo_component.has_cargo:
+                self.cargo_deposit.engage()
             else:
-                self.hatch_deposit.engage()
+                if angle is FieldAngle.LOADING_STATION:
+                    self.hatch_intake.engage()
+                else:
+                    self.hatch_deposit.engage()
             self.chassis.set_heading_sp(angle.value)
 
         if self.joystick.getRawButton(2):
@@ -226,6 +229,19 @@ class Robot(magicbot.MagicRobot):
             self.climb_automation.start_climb_lv3()
         if self.gamepad.getBackButtonPressed():
             self.climb_automation.done()
+
+        if self.gamepad.getAButtonPressed():
+            self.cargo.intake_floor(force=True)
+        if self.gamepad.getYButtonPressed():
+            self.cargo.intake_loading(force=True)
+            self.chassis.set_heading_sp(
+                FieldAngle.CARGO_FRONT.value
+            )  # Reversed side of robot
+        if (
+            self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0.5
+            or self.gamepad.getTriggerAxis(self.gamepad.Hand.kRight) > 0.5
+        ):
+            self.cargo.outake_cargo_ship(force=True)
 
     def robotPeriodic(self):
         super().robotPeriodic()
