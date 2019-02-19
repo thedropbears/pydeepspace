@@ -5,6 +5,7 @@ from components.hatch import Hatch
 from components.cargo import CargoManipulator
 from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
+from wpilib_controller import PIDController
 
 from utilities.functions import rotate_vector
 
@@ -26,9 +27,18 @@ class Aligner(StateMachine):
     def setup(self):
         self.successful = False
         self.last_vision = 0
+        self.direction = 1
+        # aligner_pid = PIDController(
+        #     Kp=5.0, Ki=0.0, Kd=0.1, measurement_source=self.get_fiducial_y, period=1 / 50
+        #     )
+        # self.aligner_pid.setInputRange(-1.5, 1.5)
+        # self.aligner_pid.setOutputRange(-2, 2)
 
-    alignment_speed = tunable(1.0)  # m/s
-    alignment_kp_y = tunable(1.5)
+    alignment_speed = tunable(1.25)  # m/s
+    alignment_kp_y = tunable(2)
+
+    # def get_fiducial_y(self):
+    #     return self.vision.get_fiducial_position()[2]
 
     @state(first=True)
     def wait_for_vision(self):
@@ -48,8 +58,8 @@ class Aligner(StateMachine):
             self.last_vision = state_tm
             self.chassis.automation_running = True
 
-        if (self.vision.fiducial_x < 0.1) or not self.vision.fiducial_in_sight:
-            self.chassis.set_inputs(self.alignment_speed, 0, 0, field_oriented=False)
+        if not self.vision.fiducial_in_sight:
+            self.chassis.set_inputs(1 * self.direction, 0, 0, field_oriented=False)
             if state_tm - self.last_vision > 0.5:
                 self.chassis.set_inputs(0, 0, 0)
                 self.next_state("success")
@@ -58,11 +68,13 @@ class Aligner(StateMachine):
             fiducial_x, fiducial_y, delta_heading = self.vision.get_fiducial_position()
             if fiducial_x > 0:
                 # Target in front of us means we are using the hatch camera - move forwards
-                vx = self.alignment_speed
+                vx = self.alignment_speed * (1 - abs(fiducial_y/1.5))
+                self.direction = 1
             else:
                 # Target behind us means we are using the cargo camera - move backwards
-                vx = -self.alignment_speed
-            vy = fiducial_y * self.alignment_kp_y
+                vx = -self.alignment_speed * (1 - abs(fiducial_y/1.5))
+                self.direction = -1
+            vy = max(min(fiducial_y * self.alignment_kp_y, 1), -1)
             vx, vy = rotate_vector(vx, vy, -delta_heading)
             self.chassis.set_inputs(vx, vy, 0, field_oriented=False)
 
