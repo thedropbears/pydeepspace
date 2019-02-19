@@ -224,16 +224,8 @@ class Robot(magicbot.MagicRobot):
             self.climber.retract_all()
 
         # Stops Cargo Intake Motor
-        if self.gamepad.getBackButtonPressed():
+        if self.gamepad.getBButtonPressed():
             self.cargo_component.stop()
-
-        # Cargo Floor Intake
-        if self.gamepad.getAButtonPressed() or self.joystick.getRawButtonPressed(3):
-            self.cargo.intake_floor()
-
-        # Cargo Loading Station Intake
-        if self.gamepad.getYButtonPressed():
-            self.cargo.intake_loading()
 
         # Toggles the Heading Hold
         if self.joystick.getRawButtonPressed(8):
@@ -254,18 +246,16 @@ class Robot(magicbot.MagicRobot):
         if self.gamepad.getBackButtonPressed():
             self.climb_automation.done()
 
+        # Cargo Floor Intake
         if self.gamepad.getAButtonPressed():
             self.cargo.intake_floor(force=True)
+
+        # Cargo Loading Station Intake
         if self.gamepad.getYButtonPressed():
             self.cargo.intake_loading(force=True)
             self.chassis.set_heading_sp(
                 FieldAngle.CARGO_FRONT.value
             )  # Reversed side of robot
-        if (
-            self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0.5
-            or self.gamepad.getTriggerAxis(self.gamepad.Hand.kRight) > 0.5
-        ):
-            self.cargo.outake_cargo_ship(force=True)
 
     def robotPeriodic(self):
         super().robotPeriodic()
