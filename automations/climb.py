@@ -14,10 +14,10 @@ class ClimbAutomation(StateMachine):
         self.engage(initial_state="extend_both_lifts_lv3")
 
     def done(self):
-        super().done()
         self.chassis.set_modules_drive_brake()
         self.chassis.automation_running = False
         self.climber.stop_all()
+        super().done()
 
     @state(first=True, must_finish=True)
     def extend_both_lifts_lv3(self, initial_call, state_tm):
@@ -38,8 +38,6 @@ class ClimbAutomation(StateMachine):
 
     @state(must_finish=True)
     def align_front_lift(self, initial_call):
-        self.move_swerves()
-
         if initial_call:
             self.climber.move_wheels()
         if self.climber.is_front_touching_podium():
@@ -48,8 +46,6 @@ class ClimbAutomation(StateMachine):
 
     @state(must_finish=True)
     def retract_front_lift(self, initial_call):
-        self.move_swerves()
-
         if initial_call:
             self.climber.retract_front()
         if self.climber.is_front_above_ground_level():
@@ -57,7 +53,7 @@ class ClimbAutomation(StateMachine):
 
     @state(must_finish=True)
     def align_back_lift(self, initial_call):
-        self.move_swerves()
+        self.move_swerves(0.5)
 
         if initial_call:
             self.climber.move_wheels()
@@ -66,15 +62,12 @@ class ClimbAutomation(StateMachine):
 
     @state(must_finish=True)
     def fire_pistons(self):
-        self.move_swerves()
-
+        self.move_swerves(0)
         self.climber.fire_solenoid()
         self.next_state_now("retract_back_lift")
 
     @state(must_finish=True)
     def retract_back_lift(self, initial_call):
-        self.move_swerves()
-
         if initial_call:
             self.climber.retract_back()
         if self.climber.is_back_retracted():
@@ -82,5 +75,5 @@ class ClimbAutomation(StateMachine):
             self.climber.stop_wheels()
             self.done()
 
-    def move_swerves(self):
-        self.chassis.set_inputs(0, 0.05, 0, field_oriented=False)
+    def move_swerves(self, velocity=0.05):
+        self.chassis.set_inputs(0, velocity, 0, field_oriented=False)
