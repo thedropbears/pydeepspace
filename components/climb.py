@@ -32,7 +32,7 @@ class Climber:
     front_direction = 0
     back_direction = 0
 
-    DRIVE_SPEED = 0.4
+    DRIVE_SPEED = 0.6
     drive_wheels = False
 
     HEIGHT_PER_REV = 0.002
@@ -159,12 +159,12 @@ class Climber:
             if self.is_front_above_ground_level():
                 self.front_lift.motor.set(self.SLOW_DOWN_SPEED)
             else:
-                self.front_lift.motor.set(output + pid_output)
+                self.front_lift.motor.set(output)
 
             if self.is_back_above_ground_level():
                 self.back_lift.motor.set(self.SLOW_DOWN_SPEED)
             else:
-                self.back_lift.motor.set(output - pid_output)
+                self.back_lift.motor.set(output)
 
         # Retract front
         elif self.front_direction > 0:
@@ -203,6 +203,8 @@ class Climber:
 
     def on_enable(self):
         self.retract_solenoid()
+        self.front_lift.motor.set(0)
+        self.back_lift.motor.set(0)
 
     def move_wheels(self):
         self.drive_wheels = True
