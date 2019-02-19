@@ -4,6 +4,7 @@ from typing import Tuple
 import numpy as np
 from magicbot import tunable
 from wpilib_controller import PIDController
+import wpilib
 
 from utilities.navx import NavX
 from .module import SwerveModule
@@ -26,7 +27,7 @@ class SwerveChassis:
     # odometry_y_vel = tunable(0)
     # odometry_z_vel = tunable(0)
 
-    hold_heading = tunable(False)
+    hold_heading = tunable(True)
 
     def __init__(self):
         self.vx = 0
@@ -39,7 +40,7 @@ class SwerveChassis:
     def setup(self):
         # Heading PID controller
         self.heading_pid = PIDController(
-            Kp=4.5, Ki=0.0, Kd=0.0, measurement_source=self.imu.getAngle, period=1 / 50
+            Kp=5.0, Ki=0.0, Kd=0.1, measurement_source=self.imu.getAngle, period=1 / 50
         )
         self.heading_pid.setInputRange(-math.pi, math.pi)
         self.heading_pid.setOutputRange(-3, 3)
@@ -65,6 +66,7 @@ class SwerveChassis:
             ],
             dtype=float,
         )
+        wpilib.SmartDashboard.putData("heading_pid", self.heading_pid)
 
         # figure out the contribution of the robot's overall rotation about the
         # z axis to each module's movement, and encode that information in a
@@ -113,6 +115,7 @@ class SwerveChassis:
             if self.momentum:
                 self.set_heading_sp_current()
                 pid_z = 0
+            wpilib.SmartDashboard.putNumber("pid_z", pid_z)
 
         input_vz = 0
         if self.vz is not None:
@@ -136,7 +139,7 @@ class SwerveChassis:
                 vx, vy = self.robot_orient(self.vx, self.vy, angle)
             else:
                 vx, vy = self.vx, self.vy
-            module.set_velocity(vx + vz_x, vy + vz_y)
+            module.set_velocity(vx + vz_x, vy + vz_y, absolute_rotation=False)
 
     def update_odometry(self, *args):
         # TODO: re-enable if we end up not using callback method
