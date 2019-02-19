@@ -232,8 +232,8 @@ class Robot(magicbot.MagicRobot):
         if self.gamepad.getYButtonPressed():
             self.cargo.intake_loading(force=True)
         if (
-            self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0
-            or self.gamepad.getTriggerAxis(self.gamepad.Hand.kRight) > 0
+            self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0.5
+            or self.gamepad.getTriggerAxis(self.gamepad.Hand.kRight) > 0.5
         ):
             self.cargo.outake_cargo_ship(force=True)
 
