@@ -60,6 +60,8 @@ class Climber:
             lift.pid_controller.setP(0.1)
             lift.pid_controller.setOutputRange(-1, 1)
             lift.forward_limit_switch.enableLimitSwitch(True)
+            lift.encoder.setPositionConversionFactor(self.HEIGHT_PER_REV)
+            lift.encoder.setVelocityConversionFactor(self.HEIGHT_PER_REV / 60)
 
         self.front_lift = self.lifts[0]
         self.back_lift = self.lifts[1]
@@ -113,16 +115,10 @@ class Climber:
         return self.front_lift.forward_limit_switch.get()
 
     def is_front_above_ground_level(self):
-        return (
-            self.front_lift.encoder.getPosition()
-            > self.GROUND_CLEARANCE / self.HEIGHT_PER_REV
-        )
+        return self.front_lift.encoder.getPosition() > self.GROUND_CLEARANCE
 
     def is_back_above_ground_level(self):
-        return (
-            self.back_lift.encoder.getPosition()
-            > self.GROUND_CLEARANCE / self.HEIGHT_PER_REV
-        )
+        return self.back_lift.encoder.getPosition() > self.GROUND_CLEARANCE
 
     def is_back_retracted(self):
         return self.back_lift.forward_limit_switch.get()
