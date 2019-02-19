@@ -141,11 +141,14 @@ class Robot(magicbot.MagicRobot):
     def teleopInit(self):
         """Initialise driver control."""
         self.chassis.set_inputs(0, 0, 0)
+        self.climb_automation.done()
+        self.cargo.done()
+        self.hatch_intake.done()
+        self.cargo_deposit.done()
+        self.hatch_deposit.done()
 
     def teleopPeriodic(self):
         """Allow the drivers to control the robot."""
-        # self.chassis.heading_hold_off()
-
         throttle = max(0.1, (1 - self.joystick.getThrottle()) / 2)  # min 10%
 
         # this is where the joystick inputs get converted to numbers that are sent
@@ -218,7 +221,7 @@ class Robot(magicbot.MagicRobot):
 
         # Stops Cargo Intake Motor
         if self.gamepad.getBButtonPressed():
-            self.cargo_component.stop()
+            self.cargo.outake_cargo_ship(force=True)
 
         # Toggles the Heading Hold
         if self.joystick.getRawButtonPressed(8):
@@ -286,10 +289,12 @@ class Robot(magicbot.MagicRobot):
                     ctre.ControlMode.Position, module.steer_enc_offset
                 )
 
-        if self.gamepad.getStartButtonPressed():
+        if self.gamepad.getStartButton():
             self.climber.retract_all()
-        if self.gamepad.getBackButtonPressed():
+            self.climber.execute()
+        if self.gamepad.getBackButton():
             self.climber.stop_all()
+            self.climber.execute()
 
 
 if __name__ == "__main__":
