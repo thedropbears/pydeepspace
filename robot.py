@@ -148,7 +148,7 @@ class Robot(magicbot.MagicRobot):
         """Allow the drivers to control the robot."""
         # self.chassis.heading_hold_off()
 
-        throttle = (1 - self.joystick.getThrottle()) / 2
+        throttle = max(0.1, (1 - self.joystick.getThrottle()) / 2)  # min 10%
         self.sd.putNumber("joy_throttle", throttle)
 
         # this is where the joystick inputs get converted to numbers that are sent
@@ -171,24 +171,31 @@ class Robot(magicbot.MagicRobot):
         self.sd.putNumber("joy_vy", joystick_vy)
         self.sd.putNumber("joy_vz", joystick_vz)
 
-        if joystick_vx or joystick_vy or joystick_vz:
-            self.chassis.set_inputs(
-                joystick_vx,
-                joystick_vy,
-                joystick_vz,
-                field_oriented=not self.joystick.getRawButton(6),
-            )
-        else:
-            self.chassis.set_inputs(0, 0, 0)
+        # Allow big stick movements from the driver to break out of an automation
+        if abs(joystick_vx) > 0.5 or abs(joystick_vy) > 0.5:
+            self.hatch_intake.done()
+            self.hatch_deposit.done()
+            self.cargo_deposit.done()
 
-        if joystick_hat != -1:
-            if self.intake.has_cargo:
-                constrained_angle = -constrain_angle(
-                    math.radians(joystick_hat) + math.pi
+        if not self.chassis.automation_running:
+            if joystick_vx or joystick_vy or joystick_vz:
+                self.chassis.set_inputs(
+                    joystick_vx,
+                    joystick_vy,
+                    joystick_vz,
+                    field_oriented=not self.joystick.getRawButton(6),
                 )
             else:
-                constrained_angle = -constrain_angle(math.radians(joystick_hat))
-            self.chassis.set_heading_sp(constrained_angle)
+                self.chassis.set_inputs(0, 0, 0)
+
+            if joystick_hat != -1:
+                if self.intake.has_cargo:
+                    constrained_angle = -constrain_angle(
+                        math.radians(joystick_hat) + math.pi
+                    )
+                else:
+                    constrained_angle = -constrain_angle(math.radians(joystick_hat))
+                self.chassis.set_heading_sp(constrained_angle)
 
         if self.joystick.getRawButtonPressed(4):
             self.hatch.punch()
@@ -272,6 +279,11 @@ class Robot(magicbot.MagicRobot):
                 module.steer_motor.set(
                     ctre.ControlMode.Position, module.steer_enc_offset
                 )
+
+        if self.gamepad.getStartButtonPressed():
+            self.climber.retract_all()
+        if self.gamepad.getBackButtonPressed():
+            self.climber.stop_all()
 
 
 if __name__ == "__main__":
