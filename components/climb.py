@@ -166,12 +166,12 @@ class Climber:
             output = self.LIFT_SPEED * 0.4
 
             pid_output = self.level_pid.update()  # * self.LIFT_SPEED
-            if self.front_lift.encoder.getPosition() > self.SLOW_DOWN_THRESHOLD:
+            if self.is_front_above_ground_level():
                 self.front_lift.motor.set(self.SLOW_DOWN_SPEED)
             else:
                 self.front_lift.motor.set(output + pid_output)
 
-            if self.back_lift.encoder.getPosition() > self.SLOW_DOWN_THRESHOLD:
+            if self.is_back_above_ground_level():
                 self.back_lift.motor.set(self.SLOW_DOWN_SPEED)
             else:
                 self.back_lift.motor.set(output - pid_output)
