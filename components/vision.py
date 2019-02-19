@@ -31,6 +31,7 @@ class Vision:
     rio_pong_time = ntproperty("/vision/rio_pong", 0.0, writeDefault=False)
     latency = ntproperty("/vision/clock_offset", 0.0)
     processing_time = ntproperty("/vision/processing_time", 0.0)
+    camera = ntproperty("/vision/game_piece", 0)  # 0 - hatch, 1 - cargo
     # NOTE: x and y are relative to the robot co-ordinate system, not the camera
 
     def __init__(self):
