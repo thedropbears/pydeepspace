@@ -81,12 +81,6 @@ class Climber:
         self.level_pid_enabled = True
 
         wpilib.SmartDashboard.putData("lift_level_pid", self.level_pid)
-        wpilib.SmartDashboard.putData(
-            "lift_front_podium_switch", self.front_podium_switch
-        )
-        wpilib.SmartDashboard.putData(
-            "lift_back_podium_switch", self.back_podium_switch
-        )
 
     def extend_all(self):
         self.extend_front()
