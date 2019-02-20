@@ -1,7 +1,7 @@
-pyfrc ~= 2019.0.6
-robotpy-ctre ~= 2019.1.2
+pyfrc ~= 2019.0.7
+robotpy-ctre ~= 2019.2
 robotpy-navx ~= 2019.0
-robotpy-rev
+robotpy-rev ~= 2019.0
 wpilib-controller
 numpy ~= 1.15
 dataclasses; python_version < '3.7'
