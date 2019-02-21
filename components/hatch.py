@@ -17,8 +17,6 @@ class Hatch:
     right_limit_switch: wpilib.DigitalInput
 
     def setup(self):
-        wpilib.SmartDashboard.putData("hatch_left_switch", self.left_limit_switch)
-        wpilib.SmartDashboard.putData("hatch_right_switch", self.right_limit_switch)
         self.has_hatch = False
 
     def on_enable(self):

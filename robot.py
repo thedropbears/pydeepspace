@@ -6,7 +6,6 @@ import rev
 import ctre
 import magicbot
 import wpilib
-from networktables import NetworkTables
 
 from automations.alignment import (
     HatchIntakeAligner,
@@ -104,7 +103,6 @@ class Robot(magicbot.MagicRobot):
         )
         self.imu = NavX()
 
-        self.sd = NetworkTables.getTable("SmartDashboard")
         wpilib.SmartDashboard.putData("Gyro", self.imu.ahrs)
 
         # hatch objects
@@ -149,7 +147,6 @@ class Robot(magicbot.MagicRobot):
         # self.chassis.heading_hold_off()
 
         throttle = max(0.1, (1 - self.joystick.getThrottle()) / 2)  # min 10%
-        self.sd.putNumber("joy_throttle", throttle)
 
         # this is where the joystick inputs get converted to numbers that are sent
         # to the chassis component. we rescale them using the rescale_js function,
@@ -166,10 +163,6 @@ class Robot(magicbot.MagicRobot):
             self.joystick.getZ(), deadzone=0.2, exponential=20.0, rate=self.spin_rate
         )
         joystick_hat = self.joystick.getPOV()
-
-        self.sd.putNumber("joy_vx", joystick_vx)
-        self.sd.putNumber("joy_vy", joystick_vy)
-        self.sd.putNumber("joy_vz", joystick_vz)
 
         # Allow big stick movements from the driver to break out of an automation
         if abs(joystick_vx) > 0.5 or abs(joystick_vy) > 0.5:
@@ -259,22 +252,6 @@ class Robot(magicbot.MagicRobot):
 
     def robotPeriodic(self):
         super().robotPeriodic()
-        for module in self.chassis.modules:
-            self.sd.putNumber(
-                module.name + "_pos_steer",
-                module.steer_motor.getSelectedSensorPosition(0),
-            )
-            self.sd.putNumber(
-                module.name + "_pos_drive",
-                module.drive_motor.getSelectedSensorPosition(0),
-            )
-            self.sd.putNumber(
-                module.name + "_drive_motor_reading",
-                module.drive_motor.getSelectedSensorVelocity(0)
-                * 10  # convert to seconds
-                / module.drive_counts_per_metre,
-            )
-        self.sd.putBoolean("heading_hold", self.chassis.hold_heading)
 
     def testPeriodic(self):
         self.vision.execute()  # Keep the time offset calcs running
@@ -282,7 +259,6 @@ class Robot(magicbot.MagicRobot):
         joystick_vx = -rescale_js(
             self.joystick.getY(), deadzone=0.1, exponential=1.5, rate=0.5
         )
-        self.sd.putNumber("joy_vx", joystick_vx)
         for button, module in zip((5, 3, 4, 6), self.chassis.modules):
             if self.joystick.getRawButton(button):
                 module.store_steer_offsets()

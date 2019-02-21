@@ -58,12 +58,6 @@ class CargoManipulator:
         wpilib.SmartDashboard.putData("cargo_pid", self.pid_controller)
 
     def execute(self) -> None:
-        wpilib.SmartDashboard.putBoolean("top_switch", self.top_limit_switch.get())
-        wpilib.SmartDashboard.putBoolean(
-            "bottom_switch", self.bottom_limit_switch.get()
-        )
-        wpilib.SmartDashboard.putBoolean("intake_switch", self.intake_switch.get())
-
         self.intake_motor.set(ctre.ControlMode.PercentOutput, self.intake_motor_output)
 
         self.pid_controller.setReference(self.setpoint)
