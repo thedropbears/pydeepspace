@@ -1,8 +1,11 @@
+import math
+
 from magicbot import tunable
 from magicbot.state_machine import StateMachine, state
 
+from automations.cargo import CargoManager
+
 from components.hatch import Hatch
-from components.cargo import CargoManipulator
 from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
 from wpilib_controller import PIDController
@@ -36,6 +39,7 @@ class Aligner(StateMachine):
 
     alignment_speed = tunable(1.25)  # m/s
     alignment_kp_y = tunable(2)
+    lookahead_factor = tunable(3)
 
     # def get_fiducial_y(self):
     #     return self.vision.get_fiducial_position()[2]
@@ -59,23 +63,29 @@ class Aligner(StateMachine):
             self.chassis.automation_running = True
 
         if not self.vision.fiducial_in_sight:
-            self.chassis.set_inputs(1 * self.direction, 0, 0, field_oriented=False)
+            #self.chassis.set_inputs(0, 0, 0)
+            #self.next_state("success")
+            self.chassis.set_inputs(self.alignment_speed * self.direction, 0, 0, field_oriented=False)
             if state_tm - self.last_vision > 0.5:
                 self.chassis.set_inputs(0, 0, 0)
                 self.next_state("success")
         else:
             self.last_vision = state_tm
             fiducial_x, fiducial_y, delta_heading = self.vision.get_fiducial_position()
+            fiducial_x /= self.lookahead_factor
+            norm = math.hypot(fiducial_x, fiducial_y)
+            vx = fiducial_x / norm * self.alignment_speed
+            vy = fiducial_y / norm * self.alignment_speed
             if fiducial_x > 0:
                 # Target in front of us means we are using the hatch camera - move forwards
-                vx = self.alignment_speed * (1 - abs(fiducial_y/1.5))
+                #vx = self.alignment_speed * (1 - abs(fiducial_y/1.5))
                 self.direction = 1
             else:
                 # Target behind us means we are using the cargo camera - move backwards
-                vx = -self.alignment_speed * (1 - abs(fiducial_y/1.5))
+                #vx = -self.alignment_speed * (1 - abs(fiducial_y/1.5))
                 self.direction = -1
-            vy = max(min(fiducial_y * self.alignment_kp_y, 1), -1)
-            vx, vy = rotate_vector(vx, vy, -delta_heading)
+            #vy = max(min(fiducial_y * self.alignment_kp_y, 1), -1)
+            #vx, vy = rotate_vector(vx, vy, -delta_heading)
             self.chassis.set_inputs(vx, vy, 0, field_oriented=False)
 
     @state(must_finish=True)
@@ -103,11 +113,11 @@ class HatchDepositAligner(Aligner):
 class CargoDepositAligner(Aligner):
 
     VERBOSE_LOGGING = True
-    cargo_component: CargoManipulator
+    cargo: CargoManager
 
     @state(must_finish=True)
     def success(self):
-        self.cargo_component.outtake()
+        self.cargo.outtaking_cargo()
         self.done()
 
 
