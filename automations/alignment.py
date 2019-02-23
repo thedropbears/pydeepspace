@@ -63,9 +63,11 @@ class Aligner(StateMachine):
             self.chassis.automation_running = True
 
         if not self.vision.fiducial_in_sight:
-            #self.chassis.set_inputs(0, 0, 0)
-            #self.next_state("success")
-            self.chassis.set_inputs(self.alignment_speed * self.direction, 0, 0, field_oriented=False)
+            # self.chassis.set_inputs(0, 0, 0)
+            # self.next_state("success")
+            self.chassis.set_inputs(
+                self.alignment_speed * self.direction, 0, 0, field_oriented=False
+            )
             if state_tm - self.last_vision > 0.5:
                 self.chassis.set_inputs(0, 0, 0)
                 self.next_state("success")
@@ -78,14 +80,14 @@ class Aligner(StateMachine):
             vy = fiducial_y / norm * self.alignment_speed
             if fiducial_x > 0:
                 # Target in front of us means we are using the hatch camera - move forwards
-                #vx = self.alignment_speed * (1 - abs(fiducial_y/1.5))
+                # vx = self.alignment_speed * (1 - abs(fiducial_y/1.5))
                 self.direction = 1
             else:
                 # Target behind us means we are using the cargo camera - move backwards
-                #vx = -self.alignment_speed * (1 - abs(fiducial_y/1.5))
+                # vx = -self.alignment_speed * (1 - abs(fiducial_y/1.5))
                 self.direction = -1
-            #vy = max(min(fiducial_y * self.alignment_kp_y, 1), -1)
-            #vx, vy = rotate_vector(vx, vy, -delta_heading)
+            # vy = max(min(fiducial_y * self.alignment_kp_y, 1), -1)
+            # vx, vy = rotate_vector(vx, vy, -delta_heading)
             self.chassis.set_inputs(vx, vy, 0, field_oriented=False)
 
     @state(must_finish=True)
