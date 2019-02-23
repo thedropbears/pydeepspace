@@ -58,7 +58,7 @@ class Vision:
 
     @property
     def fiducial_in_sight(self):
-        return time.monotonic() - (self.fiducial_time + self.latency) < 0.5
+        return time.monotonic() - (self.fiducial_time + self.latency) < 0.1
 
     def get_fiducial_position(self):
         """Return the position of the retroreflective fiducials relative to the current robot pose."""
@@ -95,7 +95,7 @@ class Vision:
     def pong(self):
         """Receive a pong from the RasPi to determine the connection latency."""
         if abs(self.rio_pong_time - self.last_pong) > 1e-4:  # Floating point comparison
-            alpha = 0.9  # Exponential averaging
+            alpha = 0.0  # Exponential averaging
             self.latency = alpha * self.latency + (1 - alpha) * (
                 self.rio_pong_time - self.raspi_pong_time
             )
