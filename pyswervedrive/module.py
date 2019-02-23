@@ -87,11 +87,17 @@ class SwerveModule:
         self.steer_motor.setInverted(self.reverse_steer_direction)
         # self.steer_motor.setSelectedSensorPosition(0)
 
-        self.steer_motor.config_kP(0, 0.75, 10)
+        self.steer_motor.config_kP(0, 0.5, 10)
         self.steer_motor.config_kI(0, 0.0, 10)
         self.steer_motor.config_kD(0, 0.0, 10)
         self.steer_motor.selectProfileSlot(0, 0)
         self.steer_motor.config_kF(0, 0, 10)
+
+        self.steer_motor.configVoltageCompSaturation(12, timeoutMs=10)
+        self.steer_motor.configPeakCurrentLimit(10, timeoutMs=10)
+        self.steer_motor.configContinuousCurrentLimit(10, timeoutMs=10)
+        self.steer_motor.enableCurrentLimit(True)
+        self.steer_motor.enableVoltageCompensation(True)
 
         self.steer_motor.setNeutralMode(ctre.NeutralMode.Coast)
 
@@ -105,22 +111,16 @@ class SwerveModule:
         # Reset drive encoder to 0
         self.drive_motor.setSelectedSensorPosition(0)
         # TODO: change back to original constants once we get on to real robot
-        self.drive_motor.config_kP(0, 0.005, 10)
+        self.drive_motor.config_kP(0, 0.015, 10)
         self.drive_motor.config_kI(0, 0, 10)
         self.drive_motor.config_kD(0, 0, 10)
         self.drive_motor.config_kF(0, 1024.0 / self.DRIVE_FREE_SPEED, 10)
-        self.drive_motor.configClosedLoopRamp(0.15, 10)
+        self.drive_motor.configClosedLoopRamp(0.45, 10)
         self.drive_motor.selectProfileSlot(0, 0)
 
         self.drive_motor.setNeutralMode(ctre.NeutralMode.Brake)
 
         self.reset_encoder_delta()
-
-        self.steer_motor.configVoltageCompSaturation(9, timeoutMs=10)
-        self.steer_motor.configPeakCurrentLimit(10, timeoutMs=10)
-        self.steer_motor.configContinuousCurrentLimit(10, timeoutMs=10)
-        self.steer_motor.enableCurrentLimit(True)
-        self.steer_motor.enableVoltageCompensation(True)
 
         self.drive_motor.configVoltageCompSaturation(9, timeoutMs=10)
         self.drive_motor.configPeakCurrentLimit(50, timeoutMs=10)
@@ -232,21 +232,24 @@ class SwerveModule:
         if not absolute_rotation:
             # logic to only move the modules when we are close to the corret angle
             azimuth_error = constrain_angle(measured_azimuth - desired_azimuth)
-            if abs(azimuth_error) < math.pi / 2:
+            if abs(azimuth_error) < math.pi / 4:
                 # if we are nearing the correct angle with the module forwards
+                self.drive_motor.setNeutralMode(ctre.NeutralMode.Brake)
                 self.drive_motor.set(
                     ctre.ControlMode.Velocity,
                     speed * self.drive_velocity_to_native_units,
                 )
                 self.aligned = True
-            elif abs(azimuth_error) > math.pi / 2:
+            elif abs(azimuth_error) > math.pi - math.pi / 4:
                 # if we are nearing the correct angle with the module backwards
+                self.drive_motor.setNeutralMode(ctre.NeutralMode.Brake)
                 self.drive_motor.set(
                     ctre.ControlMode.Velocity,
                     -speed * self.drive_velocity_to_native_units,
                 )
                 self.aligned = True
             else:
+                self.drive_motor.setNeutralMode(ctre.NeutralMode.Coast)
                 self.drive_motor.set(ctre.ControlMode.Velocity, 0)
                 self.aligned = False
         else:
