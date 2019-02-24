@@ -155,7 +155,6 @@ class Climber:
         elif self.front_direction > 0 and self.back_direction > 0:
             output = self.LIFT_SPEED * 0.4
 
-            pid_output = self.level_pid.update()  # * self.LIFT_SPEED
             if self.is_front_above_ground_level():
                 self.front_lift.motor.set(self.SLOW_DOWN_SPEED)
             else:
