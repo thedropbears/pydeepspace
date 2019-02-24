@@ -99,7 +99,6 @@ class SwerveModule:
 
         self.steer_motor.configPeakCurrentLimit(10, timeoutMs=10)
         self.steer_motor.enableCurrentLimit(True)
-        self.steer_motor.enableVoltageCompensation(True)
 
         self.steer_motor.setNeutralMode(ctre.NeutralMode.Coast)
 
