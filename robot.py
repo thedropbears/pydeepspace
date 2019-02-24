@@ -249,7 +249,8 @@ class Robot(magicbot.MagicRobot):
             )  # Reversed side of robot
 
     def robotPeriodic(self):
-        super().robotPeriodic()
+        # super().robotPeriodic()
+        wpilib.SmartDashboard.updateValues()
 
     def testPeriodic(self):
         self.vision.execute()  # Keep the time offset calcs running
