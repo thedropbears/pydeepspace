@@ -25,6 +25,7 @@ class CargoManipulator:
     COUNTS_PER_RADIAN = 20 / math.radians(105)  # measured counts
 
     INTAKE_SPEED = -0.75
+    SLOW_INTAKE_SPEED = -0.2
     OUTTAKE_SPEED = 1
 
     def __init__(self):
@@ -34,9 +35,11 @@ class CargoManipulator:
         self.arm_motor.setIdleMode(rev.IdleMode.kBrake)
         self.arm_motor.setInverted(False)
 
+        self.intake_motor.setNeutralMode(ctre.NeutralMode.Brake)
+
         self.encoder = self.arm_motor.getEncoder()
         self.pid_controller = wpilib_controller.PIDController(
-            Kp=0.028,
+            Kp=0.032,
             Ki=0.0,
             Kd=0.0,
             measurement_source=self.encoder.getPosition,
@@ -100,6 +103,9 @@ class CargoManipulator:
     def outtake(self) -> None:
         self.has_cargo = False
         self.intake_motor_output = self.OUTTAKE_SPEED
+
+    def slow_intake(self) -> None:
+        self.intake_motor_output = self.SLOW_INTAKE_SPEED
 
     def stop(self) -> None:
         self.intake_motor_output = 0

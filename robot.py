@@ -70,7 +70,7 @@ class Robot(magicbot.MagicRobot):
 
         # a + + b - + c - - d + -
         x_dist = 0.2625
-        y_dist = 0.2165
+        y_dist = 0.2665
         self.module_a = SwerveModule(  # front right module
             "a",
             steer_talon=ctre.TalonSRX(3),
@@ -144,8 +144,6 @@ class Robot(magicbot.MagicRobot):
 
     def teleopPeriodic(self):
         """Allow the drivers to control the robot."""
-        # self.chassis.heading_hold_off()
-
         throttle = max(0.1, (1 - self.joystick.getThrottle()) / 2)  # min 10%
 
         # this is where the joystick inputs get converted to numbers that are sent
@@ -218,7 +216,7 @@ class Robot(magicbot.MagicRobot):
 
         # Stops Cargo Intake Motor
         if self.gamepad.getBButtonPressed():
-            self.cargo_component.stop()
+            self.cargo.outake_cargo_ship(force=True)
 
         # Toggles the Heading Hold
         if self.joystick.getRawButtonPressed(8):
@@ -286,10 +284,22 @@ class Robot(magicbot.MagicRobot):
                     ctre.ControlMode.Position, module.steer_enc_offset
                 )
 
-        if self.gamepad.getStartButtonPressed():
+        if self.gamepad.getStartButton():
             self.climber.retract_all()
-        if self.gamepad.getBackButtonPressed():
+            self.climber.execute()
+        if self.gamepad.getBackButton():
             self.climber.stop_all()
+            self.climber.execute()
+
+        if self.gamepad.getPOV() != -1:
+            speed = 0.1
+            azimuth = math.radians(-self.gamepad.getPOV())
+            for module in self.chassis.modules:
+                module.set_velocity(
+                    speed * math.cos(azimuth),
+                    speed * math.sin(azimuth),
+                    absolute_rotation=True,
+                )
 
 
 if __name__ == "__main__":

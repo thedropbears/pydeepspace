@@ -1,8 +1,11 @@
+import math
+
 from magicbot import tunable
 from magicbot.state_machine import StateMachine, state
 
+from automations.cargo import CargoManager
+
 from components.hatch import Hatch
-from components.cargo import CargoManipulator
 from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
 
@@ -26,9 +29,17 @@ class Aligner(StateMachine):
     def setup(self):
         self.successful = False
         self.last_vision = 0
+        self.direction = 1
 
-    alignment_speed = tunable(1.0)  # m/s
-    alignment_kp_y = tunable(1.5)
+    alignment_speed = tunable(1.25)  # m/s
+    alignment_kp_y = tunable(2)
+    lookahead_factor = tunable(3)
+
+    def on_disable(self):
+        self.done()
+
+    # def get_fiducial_y(self):
+    #     return self.vision.get_fiducial_position()[2]
 
     @state(first=True)
     def wait_for_vision(self):
@@ -48,21 +59,31 @@ class Aligner(StateMachine):
             self.last_vision = state_tm
             self.chassis.automation_running = True
 
-        if (self.vision.fiducial_x < 0.1) or not self.vision.fiducial_in_sight:
-            self.chassis.set_inputs(self.alignment_speed, 0, 0, field_oriented=False)
+        if not self.vision.fiducial_in_sight:
+            # self.chassis.set_inputs(0, 0, 0)
+            # self.next_state("success")
+            self.chassis.set_inputs(
+                self.alignment_speed * self.direction, 0, 0, field_oriented=False
+            )
             if state_tm - self.last_vision > 0.5:
                 self.chassis.set_inputs(0, 0, 0)
                 self.next_state("success")
         else:
             self.last_vision = state_tm
             fiducial_x, fiducial_y, delta_heading = self.vision.get_fiducial_position()
+            fiducial_x /= self.lookahead_factor
+            norm = math.hypot(fiducial_x, fiducial_y)
+            vx = fiducial_x / norm * self.alignment_speed
+            vy = fiducial_y / norm * self.alignment_speed
             if fiducial_x > 0:
                 # Target in front of us means we are using the hatch camera - move forwards
-                vx = self.alignment_speed
+                # vx = self.alignment_speed * (1 - abs(fiducial_y/1.5))
+                self.direction = 1
             else:
                 # Target behind us means we are using the cargo camera - move backwards
-                vx = -self.alignment_speed
-            vy = fiducial_y * self.alignment_kp_y
+                # vx = -self.alignment_speed * (1 - abs(fiducial_y/1.5))
+                self.direction = -1
+            # vy = max(min(fiducial_y * self.alignment_kp_y, 1), -1)
             vx, vy = rotate_vector(vx, vy, -delta_heading)
             self.chassis.set_inputs(vx, vy, 0, field_oriented=False)
 
@@ -91,11 +112,11 @@ class HatchDepositAligner(Aligner):
 class CargoDepositAligner(Aligner):
 
     VERBOSE_LOGGING = True
-    cargo_component: CargoManipulator
+    cargo: CargoManager
 
     @state(must_finish=True)
     def success(self):
-        self.cargo_component.outtake()
+        self.cargo.outtaking_cargo()
         self.done()
 
 

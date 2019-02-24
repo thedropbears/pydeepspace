@@ -1,4 +1,4 @@
-from magicbot import StateMachine, state
+from magicbot import StateMachine, state, timed_state
 
 from components.cargo import CargoManipulator, Height
 from components.vision import Vision
@@ -8,6 +8,9 @@ class CargoManager(StateMachine):
 
     cargo_component: CargoManipulator
     vision: Vision
+
+    def on_disable(self):
+        self.done()
 
     def intake_floor(self, force=False):
         self.engage(initial_state="move_to_floor", force=force)
@@ -40,20 +43,23 @@ class CargoManager(StateMachine):
     def intaking_cargo(self):
         self.vision.camera = 1  # Switch to cargo camera
         if self.cargo_component.is_contained():
-            self.done()
+            self.next_state("finishing_intake")
         else:
             self.cargo_component.intake()
 
     @state(must_finish=True)
     def outtaking_cargo(self, initial_call, state_tm):
-        if initial_call:
-            self.cargo_component.outtake()
+        self.cargo_component.outtake()
 
         if state_tm > 0.5:
+            self.vision.camera = 0  # Switch back to hatch camera
             self.done()
 
+    @timed_state(duration=1)
+    def finishing_intake(self):
+        self.cargo_component.slow_intake()
+
     def done(self):
-        super().done()
         self.cargo_component.stop()
         self.cargo_component.move_to(Height.LOADING_STATION)
-        self.vision.camera = 0  # Switch back to hatch camera
+        super().done()
