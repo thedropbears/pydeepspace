@@ -299,6 +299,16 @@ class Robot(magicbot.MagicRobot):
             self.climber.stop_all()
             self.climber.execute()
 
+        if self.gamepad.getPOV() != -1:
+            speed = 0.1
+            azimuth = math.radians(-self.gamepad.getPOV())
+            for module in self.chassis.modules:
+                module.set_velocity(
+                    speed * math.cos(azimuth),
+                    speed * math.sin(azimuth),
+                    absolute_rotation=True,
+                )
+
 
 if __name__ == "__main__":
     wpilib.run(Robot)
