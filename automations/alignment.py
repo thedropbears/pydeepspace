@@ -8,7 +8,6 @@ from automations.cargo import CargoManager
 from components.hatch import Hatch
 from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
-from wpilib_controller import PIDController
 
 from utilities.functions import rotate_vector
 
@@ -87,7 +86,7 @@ class Aligner(StateMachine):
                 # vx = -self.alignment_speed * (1 - abs(fiducial_y/1.5))
                 self.direction = -1
             # vy = max(min(fiducial_y * self.alignment_kp_y, 1), -1)
-            # vx, vy = rotate_vector(vx, vy, -delta_heading)
+            vx, vy = rotate_vector(vx, vy, -delta_heading)
             self.chassis.set_inputs(vx, vy, 0, field_oriented=False)
 
     @state(must_finish=True)
