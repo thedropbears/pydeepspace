@@ -89,14 +89,6 @@ class SwerveModule:
         self.steer_motor.setInverted(self.reverse_steer_direction)
         # self.steer_motor.setSelectedSensorPosition(0)
 
-        # Set relevant frame periods to be at least as fast as periodic rate
-        self.steer_motor.setStatusFramePeriod(
-            ctre.WPI_TalonSRX.StatusFrameEnhanced.Status_13_Base_PIDF0, 10, 10
-        )
-        self.steer_motor.setStatusFramePeriod(
-            ctre.WPI_TalonSRX.StatusFrameEnhanced.Status_10_MotionMagic, 10, 10
-        )
-
         self.steer_motor.selectProfileSlot(0, 0)
         self.steer_motor.config_kF(0, 1023 / self.STEER_FREE_SPEED, 10)
         self.steer_motor.config_kP(0, 0.75, 10)
@@ -105,9 +97,7 @@ class SwerveModule:
         self.steer_motor.configMotionCruiseVelocity(2000, 10)
         self.steer_motor.configMotionAcceleration(10000, 10)
 
-        self.steer_motor.configVoltageCompSaturation(12, timeoutMs=10)
         self.steer_motor.configPeakCurrentLimit(10, timeoutMs=10)
-        self.steer_motor.configContinuousCurrentLimit(10, timeoutMs=10)
         self.steer_motor.enableCurrentLimit(True)
         self.steer_motor.enableVoltageCompensation(True)
 
