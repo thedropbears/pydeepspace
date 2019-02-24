@@ -30,15 +30,13 @@ class Aligner(StateMachine):
         self.successful = False
         self.last_vision = 0
         self.direction = 1
-        # aligner_pid = PIDController(
-        #     Kp=5.0, Ki=0.0, Kd=0.1, measurement_source=self.get_fiducial_y, period=1 / 50
-        #     )
-        # self.aligner_pid.setInputRange(-1.5, 1.5)
-        # self.aligner_pid.setOutputRange(-2, 2)
 
     alignment_speed = tunable(1.25)  # m/s
     alignment_kp_y = tunable(2)
     lookahead_factor = tunable(3)
+
+    def on_disable(self):
+        self.done()
 
     # def get_fiducial_y(self):
     #     return self.vision.get_fiducial_position()[2]

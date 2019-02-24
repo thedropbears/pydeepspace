@@ -141,11 +141,6 @@ class Robot(magicbot.MagicRobot):
     def teleopInit(self):
         """Initialise driver control."""
         self.chassis.set_inputs(0, 0, 0)
-        self.climb_automation.done()
-        self.cargo.done()
-        self.hatch_intake.done()
-        self.cargo_deposit.done()
-        self.hatch_deposit.done()
 
     def teleopPeriodic(self):
         """Allow the drivers to control the robot."""

@@ -9,6 +9,9 @@ class CargoManager(StateMachine):
     cargo_component: CargoManipulator
     vision: Vision
 
+    def on_disable(self):
+        self.done()
+
     def intake_floor(self, force=False):
         self.engage(initial_state="move_to_floor", force=force)
 

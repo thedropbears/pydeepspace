@@ -10,6 +10,9 @@ class ClimbAutomation(StateMachine):
     climber: Climber
     cargo_component: CargoManipulator
 
+    def on_disable(self):
+        self.done()
+
     def start_climb_lv3(self):
         self.engage(initial_state="extend_both_lifts_lv3")
 
