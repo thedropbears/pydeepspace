@@ -31,7 +31,6 @@ class PhysicsEngine:
         # for modules [a, b, c, d]. used to iterate over them
         self.module_steer_can_ids = [3, 5, 1, 7]
         self.module_drive_can_ids = [4, 6, 2, 8]
-        self.module_steer_offsets = [0] * 4
         x_off = self.X_WHEELBASE / 2
         y_off = self.Y_WHEELBASE / 2
         self.module_x_offsets = [x_off, -x_off, -x_off, x_off]
@@ -55,17 +54,20 @@ class PhysicsEngine:
             return
 
         steer_positions = []
-        for can_id, offset in zip(self.module_steer_can_ids, self.module_steer_offsets):
-            value = hal_data["CAN"][can_id]["pid0_target"]
-            hal_data["CAN"][can_id]["pulse_width_position"] = int(value)
-            position = constrain_angle(
-                (hal_data["CAN"][can_id]["pulse_width_position"] - offset)
-                / SwerveModule.STEER_COUNTS_PER_RADIAN
-            )
+        for can_id in self.module_steer_can_ids:
+            talon = hal_data["CAN"][can_id]
+            value = int(talon["motionmagic_target"])
+            talon["pulse_width_position"] = value
+            # robotpy-ctre sim UI bug: only shows quadrature encoder values
+            # in reality we'd also be getting quadrature counts,
+            # so this is a good idea anyway
+            talon["quad_position"] = value
+
+            position = constrain_angle(value / SwerveModule.STEER_COUNTS_PER_RADIAN)
             steer_positions.append(position)
 
         motor_speeds = []
-        for i, can_id in enumerate(self.module_drive_can_ids):
+        for can_id in self.module_drive_can_ids:
             talon = hal_data["CAN"][can_id]
             if talon["control_mode"] == ctre.ControlMode.Velocity:
                 enc_speed = talon["pid0_target"]
