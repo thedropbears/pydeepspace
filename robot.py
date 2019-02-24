@@ -69,8 +69,8 @@ class Robot(magicbot.MagicRobot):
         """Create motors and stuff here."""
 
         # a + + b - + c - - d + -
-        x_dist = 0.255
-        y_dist = 0.26
+        x_dist = 0.2625
+        y_dist = 0.2665
         self.module_a = SwerveModule(  # front right module
             "a",
             steer_talon=ctre.TalonSRX(3),
