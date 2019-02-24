@@ -15,6 +15,8 @@ class SwerveModule:
     WHEEL_DIAMETER: float = 0.0254 * 3
     DRIVE_ENCODER_GEAR_REDUCTION: float = 100 / 12 * 46 / 26
     STEER_COUNTS_PER_REV = 4096
+    STEER_GEAR_REDUCTION: float = 49
+    STEER_FREE_SPEED: float = 18000 / 60 / STEER_GEAR_REDUCTION * STEER_COUNTS_PER_REV / 10
     STEER_COUNTS_PER_RADIAN = STEER_COUNTS_PER_REV / math.tau
 
     drive_counts_per_rev = SRX_MAG_COUNTS_PER_REV * DRIVE_ENCODER_GEAR_REDUCTION
@@ -87,11 +89,21 @@ class SwerveModule:
         self.steer_motor.setInverted(self.reverse_steer_direction)
         # self.steer_motor.setSelectedSensorPosition(0)
 
-        self.steer_motor.config_kP(0, 0.5, 10)
+        # Set relevant frame periods to be at least as fast as periodic rate
+        self.steer_motor.setStatusFramePeriod(
+            ctre.WPI_TalonSRX.StatusFrameEnhanced.Status_13_Base_PIDF0, 10, 10
+        )
+        self.steer_motor.setStatusFramePeriod(
+            ctre.WPI_TalonSRX.StatusFrameEnhanced.Status_10_MotionMagic, 10, 10
+        )
+
+        self.steer_motor.selectProfileSlot(0, 0)
+        self.steer_motor.config_kF(0, 1023 / self.STEER_FREE_SPEED, 10)
+        self.steer_motor.config_kP(0, 0.75, 10)
         self.steer_motor.config_kI(0, 0.0, 10)
         self.steer_motor.config_kD(0, 0.0, 10)
-        self.steer_motor.selectProfileSlot(0, 0)
-        self.steer_motor.config_kF(0, 0, 10)
+        self.steer_motor.configMotionCruiseVelocity(2000, 10)
+        self.steer_motor.configMotionAcceleration(10000, 10)
 
         self.steer_motor.configVoltageCompSaturation(12, timeoutMs=10)
         self.steer_motor.configPeakCurrentLimit(10, timeoutMs=10)
@@ -217,7 +229,6 @@ class SwerveModule:
         else:
             # figure out the most efficient way to get the module to the desired direction
             delta = self.min_angular_displacement(measured_azimuth, desired_azimuth)
-
         # Following commented block is to work with the (currently broken) PID
         # control on the Talon SRXs themselves.
         # Please note, this is *NOT WRAPPED* to +-pi, because if wrapped the module
@@ -227,7 +238,8 @@ class SwerveModule:
         self.setpoint = (
             azimuth_to_set * self.STEER_COUNTS_PER_RADIAN + self.steer_enc_offset
         )
-        self.steer_motor.set(ctre.ControlMode.Position, self.setpoint)
+        self.steer_motor.set(ctre.ControlMode.MotionMagic, self.setpoint)
+        # self.steer_motor.set(ctre.ControlMode.Position, self.setpoint)
 
         if not absolute_rotation:
             # logic to only move the modules when we are close to the corret angle
@@ -266,9 +278,7 @@ class SwerveModule:
 
     def read_azimuth(self):
         steer_pos = self.steer_motor.getSelectedSensorPosition(0)
-        return constrain_angle(
-            (steer_pos - self.steer_enc_offset) / self.STEER_COUNTS_PER_RADIAN
-        )
+        return (steer_pos - self.steer_enc_offset) / self.STEER_COUNTS_PER_RADIAN
 
     @staticmethod
     def min_angular_displacement(current, target):
