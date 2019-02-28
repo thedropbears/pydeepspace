@@ -14,7 +14,7 @@ class ClimbAutomation(StateMachine):
         self.done()
 
     def start_climb_lv3(self):
-        self.engage(initial_state="extend_both_lifts_lv3")
+        self.engage()
 
     def done(self):
         super().done()
@@ -22,7 +22,7 @@ class ClimbAutomation(StateMachine):
         self.chassis.automation_running = False
 
     @state(first=True, must_finish=True)
-    def extend_both_lifts_lv3(self, initial_call, state_tm):
+    def extend_both_lifts_lv3(self, initial_call):
         self.move_swerves()
         self.climber.extend_all()
 
@@ -49,7 +49,7 @@ class ClimbAutomation(StateMachine):
             self.next_state_now("align_back_lift")
 
     @state(must_finish=True)
-    def align_back_lift(self, initial_call):
+    def align_back_lift(self):
         self.move_swerves(0.5)
         self.climber.move_wheels()
         if self.climber.is_back_touching_podium():

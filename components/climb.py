@@ -120,7 +120,7 @@ class Climber:
 
         # Extend both
         if self.front_direction < 0 and self.back_direction < 0:
-            pid_output = self.level_pid.update()  # * self.LIFT_SPEED
+            pid_output = self.level_pid.update()
 
             if self.is_both_extended():
                 self.back_lift.motor.disable()
