@@ -58,14 +58,14 @@ class Climber:
         self.drive_motor.setNeutralMode(ctre.NeutralMode.Brake)
         self.drive_motor.setInverted(True)
 
-        self.front_lift = Lift(self.front_motor)
-        self.back_lift = Lift(self.back_motor)
-        self.lifts = (self.front_lift, self.back_lift)
+        self.front = Lift(self.front_motor)
+        self.back = Lift(self.back_motor)
+        self.lifts = (self.front, self.back)
 
-        self.front_lift.reverse_limit_switch = self.front_lift.motor.getReverseLimitSwitch(
+        self.front.reverse_limit_switch = self.front.motor.getReverseLimitSwitch(
             rev.LimitSwitchPolarity.kNormallyOpen
         )
-        self.front_lift.reverse_limit_switch.enableLimitSwitch(True)
+        self.front.reverse_limit_switch.enableLimitSwitch(True)
 
         self.level_pid = wpilib_controller.PIDController(
             Kp=3, Ki=0, Kd=0, period=1 / 50, measurement_source=self.imu.getPitch
@@ -93,19 +93,19 @@ class Climber:
         self.back_direction = 1
 
     def is_both_extended(self):
-        return self.front_lift.reverse_limit_switch.get()
+        return self.front.reverse_limit_switch.get()
 
     def is_front_retracted(self):
-        return self.front_lift.is_retracted()
+        return self.front.is_retracted()
 
     def is_front_above_ground_level(self):
-        return self.front_lift.is_above_ground()
+        return self.front.is_above_ground()
 
     def is_back_above_ground_level(self):
-        return self.back_lift.is_above_ground()
+        return self.back.is_above_ground()
 
     def is_back_retracted(self):
-        return self.back_lift.is_retracted()
+        return self.back.is_retracted()
 
     def is_front_touching_podium(self):
         return self.front_podium_switch.get()
@@ -123,26 +123,26 @@ class Climber:
             pid_output = self.level_pid.update()
 
             if self.is_both_extended():
-                self.back_lift.motor.disable()
-                self.front_lift.motor.disable()
+                self.back.motor.disable()
+                self.front.motor.disable()
 
             else:
-                self.front_lift.motor.set(-self.LIFT_SPEED + pid_output)
-                self.back_lift.motor.set(-self.LIFT_SPEED - pid_output)
+                self.front.motor.set(-self.LIFT_SPEED + pid_output)
+                self.back.motor.set(-self.LIFT_SPEED - pid_output)
 
         # Retract both
         elif self.front_direction > 0 and self.back_direction > 0:
             output = self.LIFT_SPEED * 0.4
 
             if self.is_front_above_ground_level():
-                self.front_lift.motor.set(self.SLOW_DOWN_SPEED)
+                self.front.motor.set(self.SLOW_DOWN_SPEED)
             else:
-                self.front_lift.motor.set(output)
+                self.front.motor.set(output)
 
             if self.is_back_above_ground_level():
-                self.back_lift.motor.set(self.SLOW_DOWN_SPEED)
+                self.back.motor.set(self.SLOW_DOWN_SPEED)
             else:
-                self.back_lift.motor.set(output)
+                self.back.motor.set(output)
 
         else:
             output = self.LIFT_SPEED
@@ -150,26 +150,26 @@ class Climber:
             # Retract front
             if self.front_direction > 0:
                 if self.is_front_above_ground_level():
-                    self.front_lift.motor.set(self.SLOW_DOWN_SPEED)
+                    self.front.motor.set(self.SLOW_DOWN_SPEED)
                 else:
-                    self.front_lift.motor.set(output)
+                    self.front.motor.set(output)
             else:
-                self.front_lift.motor.disable()
+                self.front.motor.disable()
 
             # Retract back
             if self.back_direction > 0:
                 if self.is_back_above_ground_level():
-                    self.back_lift.motor.set(self.SLOW_DOWN_SPEED)
+                    self.back.motor.set(self.SLOW_DOWN_SPEED)
                 else:
-                    self.back_lift.motor.set(output)
+                    self.back.motor.set(output)
             else:
-                self.back_lift.motor.disable()
+                self.back.motor.disable()
 
         self.drive_motor.set(ctre.ControlMode.PercentOutput, self.drive_output)
 
     def on_disable(self):
-        self.front_lift.motor.disable()
-        self.back_lift.motor.disable()
+        self.front.motor.disable()
+        self.back.motor.disable()
 
     def on_enable(self):
         self.retract_solenoid()
