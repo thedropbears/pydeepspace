@@ -45,7 +45,7 @@ class ClimbAutomation(StateMachine):
     @state(must_finish=True)
     def retract_front_lift(self):
         self.climber.retract_front()
-        if self.climber.is_front_above_ground_level():
+        if self.climber.front.is_above_ground():
             self.next_state_now("align_back_lift")
 
     @state(must_finish=True)
@@ -64,7 +64,7 @@ class ClimbAutomation(StateMachine):
     @state(must_finish=True)
     def retract_back_lift(self):
         self.climber.retract_back()
-        if self.climber.is_back_retracted():
+        if self.climber.back.is_retracted():
             self.done()
 
     def move_swerves(self, velocity=0.05):

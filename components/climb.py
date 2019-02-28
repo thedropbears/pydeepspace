@@ -95,18 +95,6 @@ class Climber:
     def is_both_extended(self):
         return self.front.reverse_limit_switch.get()
 
-    def is_front_retracted(self):
-        return self.front.is_retracted()
-
-    def is_front_above_ground_level(self):
-        return self.front.is_above_ground()
-
-    def is_back_above_ground_level(self):
-        return self.back.is_above_ground()
-
-    def is_back_retracted(self):
-        return self.back.is_retracted()
-
     def is_front_touching_podium(self):
         return self.front_podium_switch.get()
 
@@ -134,12 +122,12 @@ class Climber:
         elif self.front_direction > 0 and self.back_direction > 0:
             output = self.LIFT_SPEED * 0.4
 
-            if self.is_front_above_ground_level():
+            if self.front.is_above_ground():
                 self.front.motor.set(self.SLOW_DOWN_SPEED)
             else:
                 self.front.motor.set(output)
 
-            if self.is_back_above_ground_level():
+            if self.back.is_above_ground():
                 self.back.motor.set(self.SLOW_DOWN_SPEED)
             else:
                 self.back.motor.set(output)
@@ -149,7 +137,7 @@ class Climber:
 
             # Retract front
             if self.front_direction > 0:
-                if self.is_front_above_ground_level():
+                if self.front.is_above_ground():
                     self.front.motor.set(self.SLOW_DOWN_SPEED)
                 else:
                     self.front.motor.set(output)
@@ -158,7 +146,7 @@ class Climber:
 
             # Retract back
             if self.back_direction > 0:
-                if self.is_back_above_ground_level():
+                if self.back.is_above_ground():
                     self.back.motor.set(self.SLOW_DOWN_SPEED)
                 else:
                     self.back.motor.set(output)
