@@ -52,7 +52,7 @@ class Climber:
 
     front_direction = magicbot.will_reset_to(0)
     back_direction = magicbot.will_reset_to(0)
-    drive_wheels = magicbot.will_reset_to(False)
+    drive_output = magicbot.will_reset_to(0)
 
     def setup(self):
         self.drive_motor.setNeutralMode(ctre.NeutralMode.Brake)
@@ -169,10 +169,7 @@ class Climber:
             self.front_lift.motor.set(0)
             self.back_lift.motor.set(0)
 
-        if self.drive_wheels:
-            self.drive_motor.set(ctre.ControlMode.PercentOutput, self.DRIVE_SPEED)
-        else:
-            self.drive_motor.set(ctre.ControlMode.PercentOutput, 0)
+        self.drive_motor.set(ctre.ControlMode.PercentOutput, self.drive_output)
 
     def on_disable(self):
         self.front_lift.motor.set(0)
@@ -184,7 +181,7 @@ class Climber:
         self.back_lift.motor.set(0)
 
     def move_wheels(self):
-        self.drive_wheels = True
+        self.drive_output = self.DRIVE_SPEED
 
     def fire_solenoid(self):
         self.solenoid.set(wpilib.DoubleSolenoid.Value.kForward)
