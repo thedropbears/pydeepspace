@@ -162,7 +162,7 @@ class Climber:
     def on_enable(self):
         self.retract_solenoid()
 
-    def move_wheels(self):
+    def drive_forward(self):
         self.drive_output = self.DRIVE_SPEED
 
     def fire_solenoid(self):
