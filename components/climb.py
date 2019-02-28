@@ -1,8 +1,11 @@
 import math
+
+import ctre
+import magicbot
+import rev
 import wpilib
 import wpilib_controller
-import rev
-import ctre
+
 from utilities.navx import NavX
 
 
@@ -43,13 +46,13 @@ class Climber:
     imu: NavX
 
     LIFT_SPEED = 1  # 1500  # 0.5  # 4700/5840 rpm
-    front_direction = 0
-    back_direction = 0
+    SLOW_DOWN_SPEED = 0.15
 
     DRIVE_SPEED = 0.6
-    drive_wheels = False
 
-    SLOW_DOWN_SPEED = 0.15
+    front_direction = magicbot.will_reset_to(0)
+    back_direction = magicbot.will_reset_to(0)
+    drive_wheels = magicbot.will_reset_to(False)
 
     def setup(self):
         self.drive_motor.setNeutralMode(ctre.NeutralMode.Brake)
@@ -116,17 +119,6 @@ class Climber:
     def is_back_touching_podium(self):
         return not self.back_podium_switch.get()
 
-    def stop_front(self):
-        self.front_direction = 0
-
-    def stop_back(self):
-        self.back_direction = 0
-
-    def stop_all(self):
-        self.stop_front()
-        self.stop_back()
-        self.stop_wheels()
-
     def execute(self):
         for lift in self.lifts:
             if lift.forward_limit_switch.get():
@@ -189,7 +181,6 @@ class Climber:
             self.drive_motor.set(ctre.ControlMode.PercentOutput, 0)
 
     def on_disable(self):
-        self.stop_all()
         self.front_lift.motor.set(0)
         self.back_lift.motor.set(0)
 
@@ -200,9 +191,6 @@ class Climber:
 
     def move_wheels(self):
         self.drive_wheels = True
-
-    def stop_wheels(self):
-        self.drive_wheels = False
 
     def fire_solenoid(self):
         self.solenoid.set(wpilib.DoubleSolenoid.Value.kForward)
