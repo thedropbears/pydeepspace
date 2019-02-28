@@ -118,9 +118,7 @@ class Robot(magicbot.MagicRobot):
         self.climber_front_podium_switch = wpilib.DigitalInput(4)
         self.climber_back_podium_switch = wpilib.DigitalInput(5)
         self.climber_drive_motor = ctre.TalonSRX(20)
-        self.climber_solenoid = wpilib.DoubleSolenoid(
-            forwardChannel=4, reverseChannel=5
-        )
+        self.climber_pistons = wpilib.DoubleSolenoid(forwardChannel=4, reverseChannel=5)
 
         # cargo related objects
         self.intake_motor = ctre.VictorSPX(9)

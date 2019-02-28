@@ -58,7 +58,7 @@ class ClimbAutomation(StateMachine):
     @state(must_finish=True)
     def fire_pistons(self):
         self.move_swerves(0)
-        self.climber.fire_solenoid()
+        self.climber.fire_pistons()
         self.next_state_now("retract_back_lift")
 
     @state(must_finish=True)

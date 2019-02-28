@@ -41,7 +41,7 @@ class Climber:
     front_podium_switch: wpilib.DigitalInput
     back_podium_switch: wpilib.DigitalInput
 
-    solenoid: wpilib.DoubleSolenoid
+    pistons: wpilib.DoubleSolenoid
 
     imu: NavX
 
@@ -160,13 +160,13 @@ class Climber:
         self.back.motor.disable()
 
     def on_enable(self):
-        self.retract_solenoid()
+        self.retract_pistons()
 
     def drive_forward(self):
         self.drive_output = self.DRIVE_SPEED
 
-    def fire_solenoid(self):
-        self.solenoid.set(wpilib.DoubleSolenoid.Value.kForward)
+    def fire_pistons(self):
+        self.pistons.set(wpilib.DoubleSolenoid.Value.kForward)
 
-    def retract_solenoid(self):
-        self.solenoid.set(wpilib.DoubleSolenoid.Value.kReverse)
+    def retract_pistons(self):
+        self.pistons.set(wpilib.DoubleSolenoid.Value.kReverse)
