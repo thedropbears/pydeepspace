@@ -62,10 +62,10 @@ class Climber:
         self.back = Lift(self.back_motor)
         self.lifts = (self.front, self.back)
 
-        self.front.reverse_limit_switch = self.front.motor.getReverseLimitSwitch(
+        self.front_reverse_limit_switch = self.front_motor.getReverseLimitSwitch(
             rev.LimitSwitchPolarity.kNormallyOpen
         )
-        self.front.reverse_limit_switch.enableLimitSwitch(True)
+        self.front_reverse_limit_switch.enableLimitSwitch(True)
 
         self.level_pid = wpilib_controller.PIDController(
             Kp=3, Ki=0, Kd=0, period=1 / 50, measurement_source=self.imu.getPitch
@@ -93,7 +93,7 @@ class Climber:
         self.back_direction = 1
 
     def is_both_extended(self):
-        return self.front.reverse_limit_switch.get()
+        return self.front_reverse_limit_switch.get()
 
     def is_front_touching_podium(self):
         return self.front_podium_switch.get()
