@@ -13,6 +13,8 @@ class Lift:
     HEIGHT_PER_REV = 0.002
     GROUND_CLEARANCE = -0.05
 
+    __slots__ = ("motor", "encoder", "forward_limit_switch")
+
     def __init__(self, motor: rev.CANSparkMax) -> None:
         self.motor = motor
         self.encoder = motor.getEncoder()
