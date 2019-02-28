@@ -4,15 +4,29 @@ import wpilib_controller
 import rev
 import ctre
 from utilities.navx import NavX
-from dataclasses import dataclass
 
 
-@dataclass
 class Lift:
-    motor: rev.CANSparkMax
-    encoder: rev._impl.CANEncoder
-    pid_controller: rev._impl.CANPIDController
-    forward_limit_switch: rev._impl.CANDigitalInput
+    HEIGHT_PER_REV = 0.002
+    GROUND_CLEARANCE = -0.05
+
+    def __init__(self, motor: rev.CANSparkMax) -> None:
+        self.motor = motor
+        self.encoder = motor.getEncoder()
+        self.forward_limit_switch = motor.getForwardLimitSwitch(
+            rev.LimitSwitchPolarity.kNormallyOpen
+        )
+
+        self.motor.setIdleMode(rev.IdleMode.kBrake)
+        self.forward_limit_switch.enableLimitSwitch(True)
+        self.encoder.setPositionConversionFactor(self.HEIGHT_PER_REV)
+        self.encoder.setVelocityConversionFactor(self.HEIGHT_PER_REV / 60)
+
+    def is_retracted(self) -> bool:
+        return self.forward_limit_switch.get()
+
+    def is_above_ground(self) -> bool:
+        return self.encoder.getPosition() > self.GROUND_CLEARANCE
 
 
 class Climber:
@@ -35,36 +49,15 @@ class Climber:
     DRIVE_SPEED = 0.6
     drive_wheels = False
 
-    HEIGHT_PER_REV = 0.002
-    GROUND_CLEARANCE = -0.05
-
     SLOW_DOWN_SPEED = 0.15
 
     def setup(self):
         self.drive_motor.setNeutralMode(ctre.NeutralMode.Brake)
         self.drive_motor.setInverted(True)
 
-        self.lifts = []
-        for lift in [self.front_motor, self.back_motor]:
-            self.lifts.append(
-                Lift(
-                    lift,
-                    lift.getEncoder(),
-                    lift.getPIDController(),
-                    lift.getForwardLimitSwitch(rev.LimitSwitchPolarity.kNormallyOpen),
-                )
-            )
-
-        for lift in self.lifts:
-            lift.motor.setIdleMode(rev.IdleMode.kBrake)
-            lift.pid_controller.setP(0.1)
-            lift.pid_controller.setOutputRange(-1, 1)
-            lift.forward_limit_switch.enableLimitSwitch(True)
-            lift.encoder.setPositionConversionFactor(self.HEIGHT_PER_REV)
-            lift.encoder.setVelocityConversionFactor(self.HEIGHT_PER_REV / 60)
-
-        self.front_lift = self.lifts[0]
-        self.back_lift = self.lifts[1]
+        self.front_lift = Lift(self.front_motor)
+        self.back_lift = Lift(self.back_motor)
+        self.lifts = (self.front_lift, self.back_lift)
 
         self.front_lift.reverse_limit_switch = self.front_lift.motor.getReverseLimitSwitch(
             rev.LimitSwitchPolarity.kNormallyOpen
@@ -106,16 +99,16 @@ class Climber:
         return self.front_lift.reverse_limit_switch.get()
 
     def is_front_retracted(self):
-        return self.front_lift.forward_limit_switch.get()
+        return self.front_lift.is_retracted()
 
     def is_front_above_ground_level(self):
-        return self.front_lift.encoder.getPosition() > self.GROUND_CLEARANCE
+        return self.front_lift.is_above_ground()
 
     def is_back_above_ground_level(self):
-        return self.back_lift.encoder.getPosition() > self.GROUND_CLEARANCE
+        return self.back_lift.is_above_ground()
 
     def is_back_retracted(self):
-        return self.back_lift.forward_limit_switch.get()
+        return self.back_lift.is_retracted()
 
     def is_front_touching_podium(self):
         return self.front_podium_switch.get()
