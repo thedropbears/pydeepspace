@@ -79,8 +79,8 @@ class Climber:
         wpilib.SmartDashboard.putData("lift_level_pid", self.level_pid)
 
     def extend_all(self):
-        self.extend_front()
-        self.extend_back()
+        self.front_direction = -1
+        self.back_direction = -1
 
     def retract_all(self):
         self.retract_front()
@@ -89,14 +89,8 @@ class Climber:
     def retract_front(self):
         self.front_direction = 1
 
-    def extend_front(self):
-        self.front_direction = -1
-
     def retract_back(self):
         self.back_direction = 1
-
-    def extend_back(self):
-        self.back_direction = -1
 
     def is_both_extended(self):
         return self.front_lift.reverse_limit_switch.get()
