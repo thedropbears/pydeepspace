@@ -52,18 +52,18 @@ class ClimbAutomation(StateMachine):
     def align_back_lift(self):
         self.move_swerves(0.5)
         self.climber.drive_forward()
+
         if self.climber.is_back_touching_podium():
-            self.next_state_now("fire_pistons")
+            self.next_state("retract_back_lift")
 
     @state(must_finish=True)
-    def fire_pistons(self):
+    def retract_back_lift(self, initial_call):
+        if initial_call:
+            self.climber.fire_pistons()
+
         self.move_swerves(0)
-        self.climber.fire_pistons()
-        self.next_state_now("retract_back_lift")
-
-    @state(must_finish=True)
-    def retract_back_lift(self):
         self.climber.retract_back()
+
         if self.climber.back.is_retracted():
             self.done()
 
