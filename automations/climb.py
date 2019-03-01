@@ -23,15 +23,15 @@ class ClimbAutomation(StateMachine):
 
     @state(first=True, must_finish=True)
     def extend_both_lifts_lv3(self, initial_call):
-        self.move_swerves()
-        self.climber.extend_all()
-
         if initial_call:
             self.chassis.set_modules_drive_coast()
             self.chassis.heading_hold_off()
             self.chassis.automation_running = True
 
             self.cargo_component.move_to(Height.LOADING_STATION)
+
+        self.move_swerves()
+        self.climber.extend_all()
 
         if self.climber.is_both_extended():
             self.next_state_now("align_front_lift")
@@ -46,6 +46,7 @@ class ClimbAutomation(StateMachine):
     @state(must_finish=True)
     def retract_front_lift(self):
         self.climber.retract_front()
+
         if self.climber.front.is_above_ground():
             self.next_state_now("align_back_lift")
 
