@@ -39,8 +39,9 @@ class ClimbAutomation(StateMachine):
     @state(must_finish=True)
     def align_front_lift(self):
         self.climber.drive_forward()
+
         if self.climber.is_front_touching_podium():
-            self.next_state_now("retract_front_lift")
+            self.next_state("retract_front_lift")
 
     @state(must_finish=True)
     def retract_front_lift(self):
