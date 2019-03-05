@@ -3,8 +3,7 @@ import time
 from collections import deque
 from typing import Deque, NamedTuple, Tuple
 
-from networktables import NetworkTables
-from networktables.util import ntproperty
+from networktables import NetworkTablesInstance
 
 from pyswervedrive.chassis import SwerveChassis
 from utilities.functions import rotate_vector
@@ -21,23 +20,78 @@ class Vision:
 
     chassis: SwerveChassis
 
-    fiducial_x: float = ntproperty("/vision/fiducial_x", 0.0, writeDefault=False)
-    fiducial_y: float = ntproperty("/vision/fiducial_y", 0.0, writeDefault=False)
-    fiducial_time: float = ntproperty("/vision/fiducial_time", -1.0, writeDefault=False)
-    ping_time: float = ntproperty("/vision/ping", 0.0, writeDefault=False)
-    raspi_pong_time: float = ntproperty("/vision/raspi_pong", 0.0, writeDefault=False)
-    rio_pong_time: float = ntproperty("/vision/rio_pong", 0.0, writeDefault=False)
-    latency: float = ntproperty("/vision/clock_offset", 0.0)
-    processing_time: float = ntproperty("/vision/processing_time", 0.0)
-    camera: float = ntproperty("/vision/game_piece", 0)  # 0 - hatch, 1 - cargo
     # NOTE: x and y are relative to the robot co-ordinate system, not the camera
 
+    @property
+    def fiducial_x(self) -> float:
+        return self.fiducial_x_entry.getDouble(0.0)
+
+    @property
+    def fiducial_y(self) -> float:
+        return self.fiducial_y_entry.getDouble(0.0)
+
+    @property
+    def fiducial_time(self) -> float:
+        return self.fiducial_time_entry.getDouble(-1.0)
+
+    @property
+    def ping_time(self) -> float:
+        return self.ping_time_entry.getDouble(0.0)
+
+    @ping_time.setter
+    def ping_time(self, value: float) -> None:
+        self.ping_time_entry.setDouble(value)
+
+    @property
+    def raspi_pong_time(self) -> float:
+        return self.raspi_pong_time_entry.getDouble(0.0)
+
+    @property
+    def rio_pong_time(self) -> float:
+        return self.rio_pong_time_entry.getDouble(0.0)
+
+    @property
+    def latency(self) -> float:
+        return self.latency_entry.getDouble(0.0)
+
+    @latency.setter
+    def latency(self, value: float) -> None:
+        self.latency_entry.setDouble(value)
+
+    @property
+    def processing_time(self) -> float:
+        return self.processing_time_entry.getDouble(0.0)
+
+    @processing_time.setter
+    def processing_time(self, value: float) -> None:
+        self.processing_time_entry.setDouble(value)
+
+    @property
+    def camera(self) -> float:
+        return self.camera_entry.getDouble(0)
+
+    @camera.setter
+    def camera(self, value: float) -> None:
+        self.camera_entry.setDouble(value)
+
     def __init__(self) -> None:
-        self.latency = 0.0
         self.last_pong = time.monotonic()
         # 50Hz control loop for 2 seconds
         self.odometry: Deque[Odometry] = deque(maxlen=50 * 2)
-        NetworkTables.setUpdateRate(1)  # ensure our flush calls flush immediately
+
+        self.ntinst = NetworkTablesInstance()
+        self.ntinst.startClient("frcvision.local")
+        self.ntinst.setUpdateRate(1)  # ensure our flush calls flush immediately
+
+        self.fiducial_x_entry = self.ntinst.getEntry("/vision/fiducial_x")
+        self.fiducial_y_entry = self.ntinst.getEntry("/vision/fiducial_y")
+        self.fiducial_time_entry = self.ntinst.getEntry("/vision/fiducial_time")
+        self.ping_time_entry = self.ntinst.getEntry("/vision/ping")
+        self.raspi_pong_time_entry = self.ntinst.getEntry("/vision/raspi_pong")
+        self.rio_pong_time_entry = self.ntinst.getEntry("/vision/rio_pong")
+        self.latency_entry = self.ntinst.getEntry("/vision/clock_offset")
+        self.processing_time_entry = self.ntinst.getEntry("/vision/processing_time")
+        self.camera_entry = self.ntinst.getEntry("/vision/game_piece")
 
     def execute(self) -> None:
         """Store the current odometry in the queue. Allows projection of target into current position."""
@@ -53,7 +107,7 @@ class Vision:
         self.pong()
         vision_time = self.fiducial_time + self.latency
         self.processing_time = time.monotonic() - vision_time
-        NetworkTables.flush()
+        self.ntinst.flush()
 
     @property
     def fiducial_in_sight(self) -> bool:
