@@ -17,6 +17,9 @@ class Waypoint(NamedTuple):
     #: Desired velocity
     v: float
 
+    def reflect_y(self) -> "Waypoint":
+        return self._replace(y=-self.y)
+
 
 class Segment(NamedTuple):
     """A Waypoint with an additional cumulative displacement."""

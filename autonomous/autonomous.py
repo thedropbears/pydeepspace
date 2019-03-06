@@ -10,10 +10,6 @@ from utilities.navx import NavX
 from utilities.pure_pursuit import PurePursuit, Waypoint, insert_trapezoidal_waypoints
 
 
-def reflect_y(v: Waypoint) -> Waypoint:
-    return Waypoint(v.x, -v.y, v.theta, v.v)
-
-
 class AutoBase(AutonomousStateMachine):
 
     # Here magicbot injects components
@@ -176,10 +172,10 @@ class RightStartAuto(AutoBase):
 
     def __init__(self):
         super().__init__()
-        self.front_cargo_bay = reflect_y(self.front_cargo_bay)
-        self.setup_loading_bay = reflect_y(self.setup_loading_bay)
-        self.loading_bay = reflect_y(self.loading_bay)
-        self.side_cargo_bay = reflect_y(self.side_cargo_bay)
+        self.front_cargo_bay = self.front_cargo_bay.reflect_y()
+        self.setup_loading_bay = self.setup_loading_bay.reflect_y()
+        self.loading_bay = self.loading_bay.reflect_y()
+        self.side_cargo_bay = self.side_cargo_bay.reflect_y()
 
 
 class LeftStartAuto(AutoBase):
