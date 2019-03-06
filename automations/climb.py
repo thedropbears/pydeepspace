@@ -14,68 +14,59 @@ class ClimbAutomation(StateMachine):
         self.done()
 
     def start_climb_lv3(self):
-        self.engage(initial_state="extend_both_lifts_lv3")
+        self.engage()
 
     def done(self):
+        super().done()
         self.chassis.set_modules_drive_brake()
         self.chassis.automation_running = False
-        self.climber.stop_all()
-        super().done()
 
     @state(first=True, must_finish=True)
-    def extend_both_lifts_lv3(self, initial_call, state_tm):
-        self.move_swerves()
-
+    def extend_both_lifts_lv3(self, initial_call):
         if initial_call:
-            self.climber.extend_all()
-
             self.chassis.set_modules_drive_coast()
             self.chassis.heading_hold_off()
             self.chassis.automation_running = True
 
             self.cargo_component.move_to(Height.LOADING_STATION)
 
+        self.move_swerves()
+        self.climber.extend_all()
+
         if self.climber.is_both_extended():
-            self.climber.stop_all()
             self.next_state_now("align_front_lift")
 
     @state(must_finish=True)
-    def align_front_lift(self, initial_call):
-        if initial_call:
-            self.climber.move_wheels()
+    def align_front_lift(self):
+        self.climber.drive_forward()
+
         if self.climber.is_front_touching_podium():
-            self.climber.stop_wheels()
-            self.next_state_now("retract_front_lift")
+            self.next_state("retract_front_lift")
 
     @state(must_finish=True)
-    def retract_front_lift(self, initial_call):
-        if initial_call:
-            self.climber.retract_front()
-        if self.climber.is_front_above_ground_level():
+    def retract_front_lift(self):
+        self.climber.retract_front()
+
+        if self.climber.front.is_above_ground():
             self.next_state_now("align_back_lift")
 
     @state(must_finish=True)
-    def align_back_lift(self, initial_call):
+    def align_back_lift(self):
         self.move_swerves(0.5)
+        self.climber.drive_forward()
 
-        if initial_call:
-            self.climber.move_wheels()
         if self.climber.is_back_touching_podium():
-            self.next_state_now("fire_pistons")
-
-    @state(must_finish=True)
-    def fire_pistons(self):
-        self.move_swerves(0)
-        self.climber.fire_solenoid()
-        self.next_state_now("retract_back_lift")
+            self.next_state("retract_back_lift")
 
     @state(must_finish=True)
     def retract_back_lift(self, initial_call):
         if initial_call:
-            self.climber.retract_back()
-        if self.climber.is_back_retracted():
-            self.climber.stop_back()
-            self.climber.stop_wheels()
+            self.climber.fire_pistons()
+
+        self.move_swerves(0)
+        self.climber.retract_back()
+
+        if self.climber.back.is_retracted():
             self.done()
 
     def move_swerves(self, velocity=0.05):
