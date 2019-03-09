@@ -116,7 +116,7 @@ class CargoDepositAligner(Aligner):
 
     @state(must_finish=True)
     def success(self):
-        self.cargo.outtaking_cargo()
+        self.cargo.outake_cargo_ship()
         self.done()
 
 

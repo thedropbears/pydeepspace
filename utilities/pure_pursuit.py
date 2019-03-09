@@ -103,7 +103,9 @@ class PurePursuit:
             else:
                 return intersection_2
         else:
-            print("No intersection found")
+            print(
+                f"No intersection start {waypoint_start} end {waypoint_end} robot {robot_position}"
+            )
             return None
 
     def build_path(self, waypoints: Sequence[Waypoint]) -> None:
@@ -130,7 +132,6 @@ class PurePursuit:
             previous_waypoint = waypoint
             self.waypoints.append(Segment(x, y, theta, speed, waypoint_distance))
         self.current_waypoint_number = 0
-        print(f"waypoints = {self.waypoints}")
 
     def compute_direction(
         self,
@@ -269,4 +270,5 @@ def insert_trapezoidal_waypoints(
             trap_waypoints.append(intermediate)
 
     trap_waypoints.append(waypoints[-1])
+    print(f"waypoints = {trap_waypoints}")
     return trap_waypoints

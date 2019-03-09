@@ -111,4 +111,4 @@ class CargoManipulator:
         self.intake_motor_output = 0
 
     def is_contained(self) -> bool:
-        return self.intake_switch.get()
+        return not self.intake_switch.get()

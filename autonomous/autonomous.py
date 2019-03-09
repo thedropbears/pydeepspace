@@ -36,11 +36,7 @@ class AutoBase(AutonomousStateMachine):
             7, 1.8 + SwerveChassis.WIDTH / 2, -math.pi / 2, 0.75
         )
         self.start_pos = Waypoint(
-            1.2 + SwerveChassis.LENGTH / 2,
-            0,
-            0,
-            2,
-            #  + SwerveChassis.WIDTH / 2
+            1.2 + SwerveChassis.LENGTH / 2, 0 + SwerveChassis.WIDTH / 2, 0, 2
         )
 
         self.completed_runs = 0
@@ -53,10 +49,13 @@ class AutoBase(AutonomousStateMachine):
 
         self.pursuit = PurePursuit(look_ahead=0.2, look_ahead_speed_modifier=0.25)
 
+    def setup(self):
+        self.hatch.has_hatch = True
+
     def on_enable(self):
         super().on_enable()
-        self.chassis.odometry_x = self.start_pos[0]
-        self.chassis.odometry_y = self.start_pos[1]
+        self.chassis.odometry_x = self.start_pos.x
+        self.chassis.odometry_y = self.start_pos.y
         self.completed_runs = 0
         # print(f"odometry = {self.current_pos}")
 
@@ -107,8 +106,8 @@ class AutoBase(AutonomousStateMachine):
                     (
                         self.current_pos,
                         Waypoint(
-                            self.current_pos[0] - 0.5,
-                            self.current_pos[1],
+                            self.current_pos.x - 1,
+                            self.current_pos.y,
                             self.imu.getAngle(),
                             1.5,
                         ),
@@ -155,7 +154,7 @@ class AutoBase(AutonomousStateMachine):
     def follow_path(self):
         vx, vy, heading = self.pursuit.find_velocity(self.chassis.position)
         if self.pursuit.completed_path:
-            self.chassis.set_inputs(0, 0, 0, field_oriented=False)
+            self.chassis.set_inputs(0, 0, 0, field_oriented=True)
             return
         # TODO implement a system to allow for rotation in waypoints
         self.chassis.set_velocity_heading(vx, vy, heading)
