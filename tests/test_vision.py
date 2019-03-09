@@ -64,22 +64,22 @@ def test_get_pose_delta():
 def test_get_fiducial_position():
     v, t = init_vision()
 
-    v.fiducial_x = 5.0
-    v.fiducial_y = 0.5
+    v.fiducial_x_entry.setDouble(5.0)
+    v.fiducial_y_entry.setDouble(0.5)
 
-    v.fiducial_time = t
+    v.fiducial_time_entry.setDouble(t)
     x, y, heading = v.get_fiducial_position()
     assert x == 5.0
     assert y == 0.5
     assert heading == 0.0
 
-    v.fiducial_time = t - 0.15
+    v.fiducial_time_entry.setDouble(t - 0.15)
     x, y, heading = v.get_fiducial_position()
     assert x == 4.0
     assert y == -0.5
     assert heading == 0.0
 
-    v.fiducial_time = t - 0.25
+    v.fiducial_time_entry.setDouble(t - 0.25)
     x, y, heading = v.get_fiducial_position()
     assert x == 3.0
     assert y == -1.5
@@ -90,22 +90,22 @@ def test_get_fiducial_position_rotated():
     v, t = init_vision(math.pi / 2)
     v.chassis.imu.heading = math.pi / 2
 
-    v.fiducial_x = 5.0
-    v.fiducial_y = 0.5
+    v.fiducial_x_entry.setDouble(5.0)
+    v.fiducial_y_entry.setDouble(0.5)
 
-    v.fiducial_time = t
+    v.fiducial_time_entry.setDouble(t)
     x, y, heading = v.get_fiducial_position()
     assert x == 5.0
     assert y == 0.5
     assert heading == 0.0
 
-    v.fiducial_time = t - 0.15
+    v.fiducial_time_entry.setDouble(t - 0.15)
     x, y, heading = v.get_fiducial_position()
     assert x == 4.0
     assert y == 1.5
     assert heading == 0.0
 
-    v.fiducial_time = t - 0.25
+    v.fiducial_time_entry.setDouble(t - 0.25)
     x, y, heading = v.get_fiducial_position()
     assert x == 3.0
     assert y == 2.5
@@ -118,16 +118,16 @@ def test_odometry_rotation():
     odom = v.odometry.popleft()
     v.odometry.appendleft(Odometry(odom.x, odom.y, math.pi / 2, odom.t))
 
-    v.fiducial_x = 5.0
-    v.fiducial_y = 0.5
+    v.fiducial_x_entry.setDouble(5.0)
+    v.fiducial_y_entry.setDouble(0.5)
 
-    v.fiducial_time = t
+    v.fiducial_time_entry.setDouble(t)
     x, y, heading = v.get_fiducial_position()
     assert x == 5.0
     assert y == 0.5
     assert heading == 0.0
 
-    v.fiducial_time = t - 0.15
+    v.fiducial_time_entry.setDouble(t - 0.15)
     x, y, heading = v.get_fiducial_position()
     assert x == 4.0
     assert y == -0.5

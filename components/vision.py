@@ -1,14 +1,12 @@
 import time
 
 from collections import deque
+from typing import Deque, NamedTuple, Tuple
 
-from networktables import NetworkTables
-from networktables.util import ntproperty
+import hal
+from networktables import NetworkTablesInstance
 
 from pyswervedrive.chassis import SwerveChassis
-
-from typing import NamedTuple
-
 from utilities.functions import rotate_vector
 
 
@@ -23,24 +21,83 @@ class Vision:
 
     chassis: SwerveChassis
 
-    fiducial_x = ntproperty("/vision/fiducial_x", 0.0, writeDefault=False)
-    fiducial_y = ntproperty("/vision/fiducial_y", 0.0, writeDefault=False)
-    fiducial_time = ntproperty("/vision/fiducial_time", -1.0, writeDefault=False)
-    ping_time = ntproperty("/vision/ping", 0.0, writeDefault=False)
-    raspi_pong_time = ntproperty("/vision/raspi_pong", 0.0, writeDefault=False)
-    rio_pong_time = ntproperty("/vision/rio_pong", 0.0, writeDefault=False)
-    latency = ntproperty("/vision/clock_offset", 0.0)
-    processing_time = ntproperty("/vision/processing_time", 0.0)
-    camera = ntproperty("/vision/game_piece", 0)  # 0 - hatch, 1 - cargo
     # NOTE: x and y are relative to the robot co-ordinate system, not the camera
 
-    def __init__(self):
-        self.latency = 0.0
-        self.last_pong = time.monotonic()
-        self.odometry = deque(maxlen=50 * 2)  # 50Hz control loop for 2 secs
-        NetworkTables.setUpdateRate(1)  # ensure our flush calls flush immediately
+    @property
+    def fiducial_x(self) -> float:
+        return self.fiducial_x_entry.getDouble(0.0)
 
-    def execute(self):
+    @property
+    def fiducial_y(self) -> float:
+        return self.fiducial_y_entry.getDouble(0.0)
+
+    @property
+    def fiducial_time(self) -> float:
+        return self.fiducial_time_entry.getDouble(-1.0)
+
+    @property
+    def ping_time(self) -> float:
+        return self.ping_time_entry.getDouble(0.0)
+
+    @ping_time.setter
+    def ping_time(self, value: float) -> None:
+        self.ping_time_entry.setDouble(value)
+
+    @property
+    def raspi_pong_time(self) -> float:
+        return self.raspi_pong_time_entry.getDouble(0.0)
+
+    @property
+    def rio_pong_time(self) -> float:
+        return self.rio_pong_time_entry.getDouble(0.0)
+
+    @property
+    def latency(self) -> float:
+        return self.latency_entry.getDouble(0.0)
+
+    @latency.setter
+    def latency(self, value: float) -> None:
+        self.latency_entry.setDouble(value)
+
+    @property
+    def processing_time(self) -> float:
+        return self.processing_time_entry.getDouble(0.0)
+
+    @processing_time.setter
+    def processing_time(self, value: float) -> None:
+        self.processing_time_entry.setDouble(value)
+
+    @property
+    def camera(self) -> float:
+        return self.camera_entry.getDouble(0)
+
+    @camera.setter
+    def camera(self, value: float) -> None:
+        self.camera_entry.setDouble(value)
+
+    def __init__(self) -> None:
+        self.last_pong = time.monotonic()
+        # 50Hz control loop for 2 seconds
+        self.odometry: Deque[Odometry] = deque(maxlen=50 * 2)
+
+        self.ntinst = NetworkTablesInstance()
+        if hal.isSimulation():
+            self.ntinst.startTestMode(server=False)
+        else:
+            self.ntinst.startClient("frcvision.local")
+        self.ntinst.setUpdateRate(1)  # ensure our flush calls flush immediately
+
+        self.fiducial_x_entry = self.ntinst.getEntry("/vision/fiducial_x")
+        self.fiducial_y_entry = self.ntinst.getEntry("/vision/fiducial_y")
+        self.fiducial_time_entry = self.ntinst.getEntry("/vision/fiducial_time")
+        self.ping_time_entry = self.ntinst.getEntry("/vision/ping")
+        self.raspi_pong_time_entry = self.ntinst.getEntry("/vision/raspi_pong")
+        self.rio_pong_time_entry = self.ntinst.getEntry("/vision/rio_pong")
+        self.latency_entry = self.ntinst.getEntry("/vision/clock_offset")
+        self.processing_time_entry = self.ntinst.getEntry("/vision/processing_time")
+        self.camera_entry = self.ntinst.getEntry("/vision/game_piece")
+
+    def execute(self) -> None:
         """Store the current odometry in the queue. Allows projection of target into current position."""
         self.odometry.appendleft(
             Odometry(
@@ -54,13 +111,13 @@ class Vision:
         self.pong()
         vision_time = self.fiducial_time + self.latency
         self.processing_time = time.monotonic() - vision_time
-        NetworkTables.flush()
+        self.ntinst.flush()
 
     @property
-    def fiducial_in_sight(self):
+    def fiducial_in_sight(self) -> bool:
         return time.monotonic() - (self.fiducial_time + self.latency) < 0.1
 
-    def get_fiducial_position(self):
+    def get_fiducial_position(self) -> Tuple[float, float, float]:
         """Return the position of the retroreflective fiducials relative to the current robot pose."""
         vision_time = self.fiducial_time + self.latency
         vision_delta_x, vision_delta_y, vision_delta_heading = self._get_pose_delta(
@@ -70,10 +127,9 @@ class Vision:
         y = self.fiducial_y - vision_delta_y
         return x, y, vision_delta_heading
 
-    def _get_pose_delta(self, t):
+    def _get_pose_delta(self, t: float) -> Tuple[float, float, float]:
         """Search the stored odometry and return the position difference between now and the specified time."""
         current = self.odometry[0]
-        previous = self.odometry[0]
         for odom in self.odometry:
             if odom.t >= t:
                 previous = odom
@@ -88,11 +144,11 @@ class Vision:
         robot_x, robot_y = rotate_vector(x, y, -heading)
         return robot_x, robot_y, current.heading - heading
 
-    def ping(self):
+    def ping(self) -> None:
         """Send a ping to the RasPi to determine the connection latency."""
         self.ping_time = time.monotonic()
 
-    def pong(self):
+    def pong(self) -> None:
         """Receive a pong from the RasPi to determine the connection latency."""
         if abs(self.rio_pong_time - self.last_pong) > 1e-4:  # Floating point comparison
             alpha = 0.0  # Exponential averaging
