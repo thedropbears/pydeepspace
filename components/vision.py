@@ -3,6 +3,7 @@ import time
 from collections import deque
 from typing import Deque, NamedTuple, Tuple
 
+import hal
 from networktables import NetworkTablesInstance
 
 from pyswervedrive.chassis import SwerveChassis
@@ -80,7 +81,10 @@ class Vision:
         self.odometry: Deque[Odometry] = deque(maxlen=50 * 2)
 
         self.ntinst = NetworkTablesInstance()
-        self.ntinst.startClient("frcvision.local")
+        if hal.isSimulation():
+            self.ntinst.startTestMode(server=False)
+        else:
+            self.ntinst.startClient("frcvision.local")
         self.ntinst.setUpdateRate(1)  # ensure our flush calls flush immediately
 
         self.fiducial_x_entry = self.ntinst.getEntry("/vision/fiducial_x")
