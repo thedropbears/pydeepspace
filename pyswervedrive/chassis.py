@@ -166,16 +166,16 @@ class SwerveChassis:
         # lambda_e = self.icre.estimate_lmda(q)
         # print(lambda_e)
 
-        vx, vy, vz = self.robot_movement_from_odometry(velocity_outputs, heading)
+        # vx, vy, vz = self.robot_movement_from_odometry(velocity_outputs, heading)
         delta_x, delta_y, delta_z = self.robot_movement_from_odometry(
-            odometry_outputs, heading, z_vel=vz
+            odometry_outputs, heading, z_vel=self.imu.getHeadingRate()
         )
 
         self.odometry_x += delta_x
         self.odometry_y += delta_y
-        self.odometry_x_vel = vx
-        self.odometry_y_vel = vy
-        self.odometry_z_vel = vz
+        # self.odometry_x_vel = vx
+        # self.odometry_y_vel = vy
+        # self.odometry_z_vel = vz
 
         self.last_heading = heading
 
@@ -262,9 +262,9 @@ class SwerveChassis:
     def position(self):
         return self.odometry_x, self.odometry_y
 
-    @property
-    def speed(self):
-        return math.hypot(self.odometry_x_vel, self.odometry_y_vel)
+    # @property
+    # def speed(self):
+    # return math.hypot(self.odometry_x_vel, self.odometry_y_vel)
 
     @property
     def all_aligned(self):
