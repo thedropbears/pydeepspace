@@ -109,6 +109,7 @@ class Robot(magicbot.MagicRobot):
         self.hatch_bottom_puncher = wpilib.Solenoid(0)
         self.hatch_left_puncher = wpilib.Solenoid(1)
         self.hatch_right_puncher = wpilib.Solenoid(2)
+        self.hatch_wedge_piston = wpilib.DoubleSolenoid(6, 3)
 
         self.hatch_left_limit_switch = wpilib.DigitalInput(8)
         self.hatch_right_limit_switch = wpilib.DigitalInput(9)
@@ -302,6 +303,9 @@ class Robot(magicbot.MagicRobot):
                     speed * math.sin(azimuth),
                     absolute_rotation=True,
                 )
+
+        if self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0.5:
+            self.hatch_wedge_piston.set(2)
 
 
 if __name__ == "__main__":

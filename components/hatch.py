@@ -12,6 +12,7 @@ class Hatch:
     hatch_bottom_puncher: wpilib.Solenoid
     hatch_left_puncher: wpilib.Solenoid
     hatch_right_puncher: wpilib.Solenoid
+    hatch_wedge_piston: wpilib.DoubleSolenoid
 
     left_limit_switch: wpilib.DigitalInput
     right_limit_switch: wpilib.DigitalInput
@@ -21,6 +22,7 @@ class Hatch:
 
     def on_enable(self):
         self._punch_on = False
+        self.hatch_wedge_piston.set(wpilib.DoubleSolenoid.Value.kForward)
         self.clear_to_retract = False
         self.fired_position = 0, 0
         self.loop_counter = 0
