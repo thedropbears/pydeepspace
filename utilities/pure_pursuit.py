@@ -17,8 +17,8 @@ class Waypoint(NamedTuple):
     #: Desired velocity
     v: float
 
-    def reflect_y(self) -> "Waypoint":
-        return self._replace(y=-self.y)
+    def reflect(self) -> "Waypoint":
+        return self._replace(y=-self.y, theta=-self.theta)
 
 
 class Segment(NamedTuple):
