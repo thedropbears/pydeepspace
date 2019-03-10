@@ -1,4 +1,5 @@
 import math
+import time
 from typing import Tuple
 
 import numpy as np
@@ -65,6 +66,8 @@ class SwerveChassis:
             ],
             dtype=float,
         )
+
+        self.last_odometry_time = 0
         # wpilib.SmartDashboard.putData("heading_pid", self.heading_pid)
 
         # figure out the contribution of the robot's overall rotation about the
@@ -99,6 +102,8 @@ class SwerveChassis:
         self.odometry_updated = False
         for module in self.modules:
             module.reset_encoder_delta()
+
+        self.last_odometry_time = time.monotonic()
 
     def execute(self):
 
@@ -166,22 +171,29 @@ class SwerveChassis:
         # lambda_e = self.icre.estimate_lmda(q)
         # print(lambda_e)
 
-        # vx, vy, vz = self.robot_movement_from_odometry(velocity_outputs, heading)
-        delta_x, delta_y, delta_z = self.robot_movement_from_odometry(
-            odometry_outputs, heading, z_vel=self.imu.getHeadingRate()
-        )
+        now = time.monotonic()
+        vx, vy, vz = self.robot_movement_from_odometry(velocity_outputs, heading)
+        # delta_x, delta_y, delta_z = self.robot_movement_from_odometry(
+        # odometry_outputs, heading, z_vel=self.imu.getHeadingRate()
+        # )
+
+        delta_t = now - self.last_odometry_time
+        delta_x = vx * delta_t
+        delta_y = vy * delta_t
 
         self.odometry_x += delta_x
         self.odometry_y += delta_y
-        # self.odometry_x_vel = vx
-        # self.odometry_y_vel = vy
-        # self.odometry_z_vel = vz
+        self.odometry_x_vel = vx
+        self.odometry_y_vel = vy
+        self.odometry_z_vel = vz
 
         self.last_heading = heading
 
         self.odometry_updated = True
 
         self.set_modules_drive_brake()
+
+        self.last_odometry_time = now
 
     def robot_movement_from_odometry(self, odometry_outputs, angle, z_vel=0):
         lstsq_ret = np.linalg.lstsq(self.A, odometry_outputs, rcond=None)
@@ -262,9 +274,9 @@ class SwerveChassis:
     def position(self):
         return self.odometry_x, self.odometry_y
 
-    # @property
-    # def speed(self):
-    # return math.hypot(self.odometry_x_vel, self.odometry_y_vel)
+    @property
+    def speed(self):
+        return math.hypot(self.odometry_x_vel, self.odometry_y_vel)
 
     @property
     def all_aligned(self):
