@@ -131,9 +131,12 @@ class Robot(magicbot.MagicRobot):
 
         self.spin_rate = 2.5
 
+    def autonomous(self):
+        self.imu.resetHeading()
+        super().autonomous()
+
     def disabledPeriodic(self):
         self.chassis.set_inputs(0, 0, 0)
-        self.imu.resetHeading()
         self.vision.execute()  # Keep the time offset calcs running
 
     def teleopInit(self):

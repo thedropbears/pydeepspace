@@ -171,10 +171,14 @@ class RightStartAuto(AutoBase):
 
     def __init__(self):
         super().__init__()
-        self.front_cargo_bay = self.front_cargo_bay.reflect_y()
-        self.setup_loading_bay = self.setup_loading_bay.reflect_y()
-        self.loading_bay = self.loading_bay.reflect_y()
-        self.side_cargo_bay = self.side_cargo_bay.reflect_y()
+        self.front_cargo_bay = self.front_cargo_bay.reflect()
+        self.setup_loading_bay = self.setup_loading_bay.reflect()
+        self.loading_bay = self.loading_bay.reflect()
+        self.side_cargo_bay = self.side_cargo_bay.reflect()
+        self.side_cargo_bay_alignment_point = (
+            self.side_cargo_bay_alignment_point.reflect()
+        )
+        self.start_pos = self.start_pos.reflect()
 
 
 class LeftStartAuto(AutoBase):
