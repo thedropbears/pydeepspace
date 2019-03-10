@@ -98,7 +98,7 @@ class Climber:
         return self.front_reverse_limit_switch.get()
 
     def is_front_touching_podium(self):
-        return self.front_podium_switch.get()
+        return not self.front_podium_switch.get()
 
     def is_back_touching_podium(self):
         return not self.back_podium_switch.get()
