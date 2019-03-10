@@ -21,8 +21,7 @@ class CargoManipulator:
     intake_switch: wpilib.DigitalInput
 
     GEAR_RATIO = 49 * 84 / 50
-    COUNTS_PER_REV = 1
-    COUNTS_PER_RADIAN = 20 / math.radians(105)  # measured counts
+    UNITS_PER_RADIAN = 20 / math.radians(105)  # measured
 
     INTAKE_SPEED = -0.75
     SLOW_INTAKE_SPEED = -0.2
@@ -77,10 +76,6 @@ class CargoManipulator:
 
     def at_height(self, desired_height) -> bool:
         return abs(desired_height.value - self.encoder.getPosition()) <= self.tolerance
-
-    @classmethod
-    def counts_per_rad(cls, angle) -> float:
-        return angle * cls.COUNTS_PER_RADIAN
 
     def move_to(self, height: Height) -> None:
         """Move arm to specified height.
