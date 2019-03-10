@@ -78,7 +78,7 @@ class Climber:
 
         self.level_pid_enabled = True
 
-        wpilib.SmartDashboard.putData("lift_level_pid", self.level_pid)
+        # wpilib.SmartDashboard.putData("lift_level_pid", self.level_pid)
 
     def extend_all(self):
         self.front_direction = -1

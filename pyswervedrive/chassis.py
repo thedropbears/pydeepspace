@@ -4,7 +4,6 @@ from typing import Tuple
 import numpy as np
 from magicbot import tunable
 from wpilib_controller import PIDController
-import wpilib
 
 from utilities.navx import NavX
 from .module import SwerveModule
@@ -66,7 +65,7 @@ class SwerveChassis:
             ],
             dtype=float,
         )
-        wpilib.SmartDashboard.putData("heading_pid", self.heading_pid)
+        # wpilib.SmartDashboard.putData("heading_pid", self.heading_pid)
 
         # figure out the contribution of the robot's overall rotation about the
         # z axis to each module's movement, and encode that information in a
@@ -115,7 +114,6 @@ class SwerveChassis:
             if self.momentum:
                 self.set_heading_sp_current()
                 pid_z = 0
-            wpilib.SmartDashboard.putNumber("pid_z", pid_z)
 
         input_vz = 0
         if self.vz is not None:
