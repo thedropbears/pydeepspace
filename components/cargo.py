@@ -6,6 +6,8 @@ import rev
 import wpilib
 import wpilib_controller
 
+from components.vision import Vision
+
 
 class Height(enum.Enum):
     FLOOR = 18.8
@@ -14,6 +16,8 @@ class Height(enum.Enum):
 
 
 class CargoManipulator:
+
+    vision: Vision
 
     arm_motor: rev.CANSparkMax
     intake_motor: ctre.VictorSPX
@@ -68,6 +72,7 @@ class CargoManipulator:
 
         if self.is_contained():
             self.has_cargo = True
+            self.vision.camera = 1  # Switch to cargo camera
 
         if self.top_limit_switch.get():
             self.encoder.setPosition(Height.LOADING_STATION.value)
