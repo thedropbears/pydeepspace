@@ -305,7 +305,7 @@ class Robot(magicbot.MagicRobot):
                 )
 
         if self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0.5:
-            self.hatch_wedge_piston.set(2)
+            self.hatch_wedge_piston.set(wpilib.DoubleSolenoid.Value.kReverse)
 
 
 if __name__ == "__main__":
