@@ -260,3 +260,57 @@ class RightSideOnly(SideOnlyBase):
     def __init__(self):
         super().__init__()
         self.coordinates = right_coordinates
+
+
+class DriveForwards(AutonomousStateMachine):
+    MODE_NAME = "Drive Forwards - Default"
+    DEFAULT = True
+
+    chassis: SwerveChassis
+    imu: NavX
+
+    joystick: wpilib.Joystick
+
+    def __init__(self):
+        super().__init__()
+        self.pursuit = PurePursuit(look_ahead=0.2, look_ahead_speed_modifier=0.25)
+
+        self.acceleration = 1
+        self.deceleration = -0.5
+
+    def on_enable(self):
+        super().on_enable()
+        self.chassis.odometry_x = 0
+        self.chassis.odometry_y = 0
+
+    @state(first=True)
+    def wait_for_input(self):
+        if self.joystick.getY() < -0.5:  # joystick -y is forwards
+            self.next_state("drive_forwards")
+
+    @state
+    def drive_forwards(self, initial_call):
+        if initial_call:
+            waypoints = insert_trapezoidal_waypoints(
+                (self.current_pos, Waypoint(1.5, 0, 0, 0)),
+                acceleration=self.acceleration,
+                deceleration=self.deceleration,
+            )
+            self.pursuit.build_path(waypoints)
+        self.follow_path()
+        if self.pursuit.completed_path:
+            self.chassis.set_inputs(0, 0, 0)
+            self.done()
+
+    @property
+    def current_pos(self):
+        return Waypoint(
+            self.chassis.odometry_x, self.chassis.odometry_y, self.imu.getAngle(), 2
+        )
+
+    def follow_path(self):
+        vx, vy, heading = self.pursuit.find_velocity(self.chassis.position)
+        if self.pursuit.completed_path:
+            self.chassis.set_inputs(0, 0, 0, field_oriented=True)
+            return
+        self.chassis.set_velocity_heading(vx, vy, heading)
