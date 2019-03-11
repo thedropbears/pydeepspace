@@ -84,7 +84,7 @@ class Vision:
         if hal.isSimulation():
             self.ntinst.startTestMode(server=False)
         else:
-            self.ntinst.startClient("frcvision.local")
+            self.ntinst.startClient("10.47.74.6")  # Raspberry pi's IP
         self.ntinst.setUpdateRate(1)  # ensure our flush calls flush immediately
 
         self.fiducial_x_entry = self.ntinst.getEntry("/vision/fiducial_x")
