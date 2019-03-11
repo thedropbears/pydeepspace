@@ -148,6 +148,8 @@ class Robot(magicbot.MagicRobot):
     def teleopInit(self):
         """Initialise driver control."""
         self.chassis.set_inputs(0, 0, 0)
+        self.hatch_intake.alignment_speed = 0.9
+        self.hatch_deposit.alignment_speed = 0.9
 
     def teleopPeriodic(self):
         """Allow the drivers to control the robot."""
@@ -293,9 +295,6 @@ class Robot(magicbot.MagicRobot):
 
         if self.gamepad.getStartButton():
             self.climber.retract_all()
-            self.climber.execute()
-        if self.gamepad.getBackButton():
-            self.climber.stop_all()
             self.climber.execute()
 
         if self.gamepad.getPOV() != -1:

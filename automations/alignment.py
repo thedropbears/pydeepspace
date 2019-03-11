@@ -31,7 +31,7 @@ class Aligner(StateMachine):
         self.last_vision = 0
         self.direction = 1
 
-    alignment_speed = tunable(0.9)  # m/s
+    alignment_speed = tunable(0.9)  # m/s being changed in auto and teleop init
     alignment_kp_y = tunable(2)
     lookahead_factor = tunable(3)
 

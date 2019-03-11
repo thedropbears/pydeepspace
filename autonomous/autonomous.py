@@ -76,7 +76,7 @@ class AutoBase(AutonomousStateMachine):
     def setup(self):
         self.hatch.has_hatch = True
         self.hatch_intake.alignment_speed = 1.2
-        self.hatch_deposit.alignment_speed = 1.2
+        self.hatch_deposit.alignment_speed = 1.0
 
     def on_enable(self):
         super().on_enable()
