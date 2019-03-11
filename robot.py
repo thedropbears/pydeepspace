@@ -217,10 +217,6 @@ class Robot(magicbot.MagicRobot):
             self.hatch.punch()
             self.hatch.clear_to_retract = True
 
-        # Manual Retraction of both climb legs
-        if self.gamepad.getXButtonPressed():
-            self.climber.retract_all()
-
         # Stops Cargo Intake Motor
         if self.gamepad.getBButtonPressed():
             self.cargo.outake_cargo_ship(force=True)
