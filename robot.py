@@ -65,6 +65,10 @@ class Robot(magicbot.MagicRobot):
 
     offset_rotation_rate = 20
 
+    def __init__(self):
+        self.timer = 0
+        super().__init__()
+
     def createObjects(self):
         """Create motors and stuff here."""
 
@@ -133,6 +137,7 @@ class Robot(magicbot.MagicRobot):
         self.spin_rate = 2.5
 
     def autonomous(self):
+        self.timer = 135
         self.imu.resetHeading()
         super().autonomous()
 
@@ -252,6 +257,9 @@ class Robot(magicbot.MagicRobot):
 
     def robotPeriodic(self):
         # super().robotPeriodic()
+        if self.timer > 0:
+            self.timer -= 0.05
+        wpilib.SmartDashboard.putNumber("timer", self.timer)
         wpilib.SmartDashboard.updateValues()
 
     def testPeriodic(self):
