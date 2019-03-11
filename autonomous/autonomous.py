@@ -220,3 +220,43 @@ class RightFrontOnly(FrontOnlyBase):
     def __init__(self):
         super().__init__()
         self.coordinates = right_coordinates
+
+
+class SideOnlyBase(AutoBase):
+    @state(first=True)
+    def drive_to_cargo_bay(self, initial_call):
+        if initial_call:
+            waypoints = insert_trapezoidal_waypoints(
+                (
+                    self.current_pos,
+                    self.coordinates.side_cargo_bay_alignment_point,
+                    self.coordinates.side_cargo_bay,
+                ),
+                self.acceleration,
+                self.deceleration,
+            )
+            self.pursuit.build_path(waypoints)
+        self.follow_path()
+        if (
+            self.vision.fiducial_in_sight and self.ready_for_vision()
+        ) or self.pursuit.completed_path:
+            self.next_state("deposit_hatch")
+
+    @state
+    def deposit_hatch(self, initial_call):
+        if initial_call:
+            self.hatch_deposit.engage(initial_state="target_tape_align")
+        if not self.hatch.has_hatch:
+            self.done()
+
+
+class LeftSideOnly(SideOnlyBase):
+    MODE_NAME = "Left Side Hatch Only"
+
+
+class RightSideOnly(SideOnlyBase):
+    MODE_NAME = "Right Side Hatch Only"
+
+    def __init__(self):
+        super().__init__()
+        self.coordinates = right_coordinates
