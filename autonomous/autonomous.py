@@ -201,4 +201,22 @@ class LeftFullAuto(AutoBase):
     MODE_NAME = "Left Full Autonomous"
 
 
+class FrontOnlyBase(AutoBase):
+    @state
+    def deposit_hatch(self, initial_call):
+        if initial_call:
+            self.hatch_deposit.engage(initial_state="target_tape_align")
+        if not self.hatch.has_hatch:
+            self.done()
 
+
+class LeftFrontOnly(FrontOnlyBase):
+    MODE_NAME = "Left Front Hatch Only"
+
+
+class RightFrontOnly(FrontOnlyBase):
+    MODE_NAME = "Right Front Hatch Only"
+
+    def __init__(self):
+        super().__init__()
+        self.coordinates = right_coordinates
