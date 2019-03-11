@@ -41,7 +41,7 @@ class SwerveChassis:
         # Heading PID controller
         self.heading_pid = PIDController(
             Kp=6.0, Ki=0.0, Kd=0.05, measurement_source=self.imu.getAngle, period=1 / 50
-        )
+        )  # this gain is being changed depending on speed
         self.heading_pid.setInputRange(-math.pi, math.pi)
         self.heading_pid.setOutputRange(-3, 3)
         self.heading_pid.setContinuous()
@@ -143,6 +143,11 @@ class SwerveChassis:
             else:
                 vx, vy = self.vx, self.vy
             module.set_velocity(vx + vz_x, vy + vz_y, absolute_rotation=False)
+
+        if abs(math.hypot(self.vx, self.vy)) > 1:
+            self.heading_pid.setP(4.0)
+        else:
+            self.heading_pid.setP(6.0)
 
     def update_odometry(self, *args):
         # TODO: re-enable if we end up not using callback method
