@@ -51,13 +51,20 @@ class ClimbAutomation(StateMachine):
         if self.climber.front.is_above_ground():
             self.next_state_now("align_back_lift")
 
-    @timed_state(must_finish=True, next_state="retract_back_lif", duration=2)
+    @timed_state(must_finish=True, next_state="roll_back", duration=2)
     def align_back_lift(self):
         self.move_swerves(0.5)
         self.climber.drive_forward()
 
-        if self.climber.is_back_touching_podium():
+    @state
+    def roll_back(self, initial_call):
+        if initial_call:
+            self.start_odometry = self.chassis.odometry_y
+        self.move_swerves(-0.3)
+        self.climber.drive_forwards(-0.2)
+        if abs(self.chassis.odometry_y-self.start_odometry) > 0.05:
             self.next_state("retract_back_lift")
+            self.move_swerves(0)
 
     @state(must_finish=True)
     def retract_back_lift(self, initial_call):

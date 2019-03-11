@@ -164,8 +164,8 @@ class Climber:
     def on_enable(self):
         self.retract_pistons()
 
-    def drive_forward(self):
-        self.drive_output = self.DRIVE_SPEED
+    def drive_forward(self, drive_speed=DRIVE_SPEED):
+        self.drive_output = drive_speed
 
     def fire_pistons(self):
         self.pistons.set(wpilib.DoubleSolenoid.Value.kForward)
