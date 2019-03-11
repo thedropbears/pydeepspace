@@ -31,7 +31,7 @@ class Aligner(StateMachine):
         self.last_vision = 0
         self.direction = 1
 
-    alignment_speed = tunable(0.75)  # m/s
+    alignment_speed = tunable(0.9)  # m/s
     alignment_kp_y = tunable(2)
     lookahead_factor = tunable(3)
 
@@ -116,7 +116,7 @@ class CargoDepositAligner(Aligner):
 
     @state(must_finish=True)
     def success(self):
-        self.cargo.outake_cargo_ship()
+        self.cargo.outake_cargo_ship(force=True)
         self.done()
 
 
