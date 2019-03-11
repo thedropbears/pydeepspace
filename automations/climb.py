@@ -1,4 +1,4 @@
-from magicbot import StateMachine, state
+from magicbot import StateMachine, state, timed_state
 from components.climb import Climber
 from components.cargo import CargoManipulator, Height
 from pyswervedrive.chassis import SwerveChassis
@@ -9,6 +9,7 @@ class ClimbAutomation(StateMachine):
     chassis: SwerveChassis
     climber: Climber
     cargo_component: CargoManipulator
+    VERBOSE_LOGGING = True
 
     def on_disable(self):
         self.done()
@@ -36,7 +37,7 @@ class ClimbAutomation(StateMachine):
         if self.climber.is_both_extended():
             self.next_state_now("align_front_lift")
 
-    @state(must_finish=True)
+    @timed_state(must_finish=True, next_state="retract_front_lift", duration=1)
     def align_front_lift(self):
         self.climber.drive_forward()
 
@@ -50,7 +51,7 @@ class ClimbAutomation(StateMachine):
         if self.climber.front.is_above_ground():
             self.next_state_now("align_back_lift")
 
-    @state(must_finish=True)
+    @timed_state(must_finish=True, next_state="retract_back_lif", duration=2)
     def align_back_lift(self):
         self.move_swerves(0.5)
         self.climber.drive_forward()
@@ -63,6 +64,7 @@ class ClimbAutomation(StateMachine):
         if initial_call:
             self.climber.fire_pistons()
 
+        self.climber.drive_forward()
         self.move_swerves(0)
         self.climber.retract_back()
 
