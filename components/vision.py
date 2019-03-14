@@ -67,14 +67,6 @@ class Vision:
     def processing_time(self, value: float) -> None:
         self.processing_time_entry.setDouble(value)
 
-    @property
-    def camera(self) -> float:
-        return self.camera_entry.getDouble(0)
-
-    @camera.setter
-    def camera(self, value: float) -> None:
-        self.camera_entry.setDouble(value)
-
     def __init__(self) -> None:
         self.last_pong = time.monotonic()
         # 50Hz control loop for 2 seconds
@@ -156,3 +148,11 @@ class Vision:
                 self.rio_pong_time - self.raspi_pong_time
             )
             self.last_pong = self.rio_pong_time
+
+    def use_hatch(self) -> None:
+        """Switch to the hatch camera."""
+        self.camera_entry.setDouble(0)
+
+    def use_cargo(self) -> None:
+        """Switch to the cargo camera."""
+        self.camera_entry.setDouble(1)

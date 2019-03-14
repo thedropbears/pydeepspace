@@ -41,7 +41,7 @@ class CargoManager(StateMachine):
 
     @state(must_finish=True)
     def intaking_cargo(self):
-        self.vision.camera = 1  # Switch to cargo camera
+        self.vision.use_cargo()
         if self.cargo_component.is_contained():
             self.next_state("finishing_intake")
         else:
@@ -52,7 +52,7 @@ class CargoManager(StateMachine):
         self.cargo_component.outtake()
 
         if state_tm > 0.5:
-            self.vision.camera = 0  # Switch back to hatch camera
+            self.vision.use_hatch()
             self.done()
 
     @timed_state(duration=1)

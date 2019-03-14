@@ -76,7 +76,6 @@ class AutoBase(AutonomousStateMachine):
         self.hatch.has_hatch = True
         self.hatch_intake.alignment_speed = 0.75
         self.hatch_deposit.alignment_speed = 0.75
-        self.vision.camera = 0
 
     def on_enable(self):
         super().on_enable()

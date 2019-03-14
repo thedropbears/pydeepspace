@@ -29,10 +29,10 @@ class CargoManipulator:
 
     INTAKE_SPEED = -0.75
     SLOW_INTAKE_SPEED = -0.2
-    OUTTAKE_SPEED = 1
+    OUTTAKE_SPEED = 1.0
 
     def __init__(self):
-        self.intake_motor_output = 0
+        self.intake_motor_output = 0.0
 
     def setup(self) -> None:
         self.arm_motor.setIdleMode(rev.IdleMode.kBrake)
@@ -72,7 +72,7 @@ class CargoManipulator:
 
         if self.is_contained():
             self.has_cargo = True
-            self.vision.camera = 1  # Switch to cargo camera
+            self.vision.use_cargo()
 
         if self.top_limit_switch.get():
             self.encoder.setPosition(Height.LOADING_STATION.value)
