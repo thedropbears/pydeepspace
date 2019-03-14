@@ -67,12 +67,6 @@ class Climber:
         self.front_reverse_limit_switch = self.front_motor.getReverseLimitSwitch(
             rev.LimitSwitchPolarity.kNormallyOpen
         )
-        self.front_top_limit_switch = self.front_motor.getForwardLimitSwitch(
-            rev.LimitSwitchPolarity.kNormallyOpen
-        )
-        self.back_top_limit_switch = self.back_motor.getForwardLimitSwitch(
-            rev.LimitSwitchPolarity.kNormallyOpen
-        )
         self.front_reverse_limit_switch.enableLimitSwitch(True)
 
         self.level_pid = wpilib_controller.PIDController(
@@ -81,8 +75,6 @@ class Climber:
         self.level_pid.setInputRange(-math.pi, math.pi)
         self.level_pid.setOutputRange(-1, 1)
         self.level_pid.setReference(0)
-
-        self.level_pid_enabled = True
 
         self.running = True
 
