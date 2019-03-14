@@ -88,7 +88,7 @@ class PurePursuit:
             left_y = -D * dx
             denominator = dr ** 2
             if denominator == 0:
-                print("Pursuit: caught division by zero")
+                # print("Pursuit: caught division by zero")
                 return None
             intersection_1 = np.array((left_x + right_x, left_y + right_y))
             intersection_1 /= denominator
@@ -103,9 +103,9 @@ class PurePursuit:
             else:
                 return intersection_2
         else:
-            print(
-                f"No intersection start {waypoint_start} end {waypoint_end} robot {robot_position}"
-            )
+            # print(
+            #     f"No intersection start {waypoint_start} end {waypoint_end} robot {robot_position}"
+            # )
             return None
 
     def build_path(self, waypoints: Sequence[Waypoint]) -> None:
@@ -193,7 +193,7 @@ class PurePursuit:
     def find_velocity(self, robot_position: Cartesian2D) -> Tuple[float, float, float]:
         if self.current_waypoint_number >= len(self.waypoints) - 1:
             self.completed_path = True
-            print("WARNING: path completed")
+            # print("WARNING: path completed")
             return 0, 0, 0
         distance_along_path = self.distance_along_path(robot_position)
         segment_start = self.waypoints[self.current_waypoint_number]
@@ -212,7 +212,7 @@ class PurePursuit:
         if self.distance_traveled + self.speed_look_ahead >= end_distance:
             # if we have reached the end of our current segment
             self.current_waypoint_number += 1
-            print("changed segment")
+            # print("changed segment")
         return vx, vy, heading
 
 
@@ -270,5 +270,5 @@ def insert_trapezoidal_waypoints(
             trap_waypoints.append(intermediate)
 
     trap_waypoints.append(waypoints[-1])
-    print(f"waypoints = {trap_waypoints}")
+    # print(f"waypoints = {trap_waypoints}")
     return trap_waypoints
