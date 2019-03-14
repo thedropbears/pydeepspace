@@ -67,6 +67,12 @@ class Climber:
         self.front_reverse_limit_switch = self.front_motor.getReverseLimitSwitch(
             rev.LimitSwitchPolarity.kNormallyOpen
         )
+        self.front_top_limit_switch = self.front_motor.getForwardLimitSwitch(
+            rev.LimitSwitchPolarity.kNormallyOpen
+        )
+        self.back_top_limit_switch = self.back_motor.getForwardLimitSwitch(
+            rev.LimitSwitchPolarity.kNormallyOpen
+        )
         self.front_reverse_limit_switch.enableLimitSwitch(True)
 
         self.level_pid = wpilib_controller.PIDController(
@@ -77,6 +83,8 @@ class Climber:
         self.level_pid.setReference(0)
 
         self.level_pid_enabled = True
+
+        self.running = True
 
         # wpilib.SmartDashboard.putData("lift_level_pid", self.level_pid)
 
@@ -94,6 +102,9 @@ class Climber:
     def retract_back(self):
         self.back_direction = 1
 
+    def level_back(self):
+        self.back_direction = 0
+
     def is_both_extended(self):
         return self.front_reverse_limit_switch.get()
 
@@ -108,9 +119,9 @@ class Climber:
             if lift.forward_limit_switch.get():
                 lift.encoder.setPosition(0)
 
+        pid_output = self.level_pid.update()
         # Extend both
         if self.front_direction < 0 and self.back_direction < 0:
-            pid_output = self.level_pid.update()
 
             if self.is_both_extended():
                 self.back.motor.disable()
@@ -141,6 +152,7 @@ class Climber:
             if self.front_direction > 0:
                 if self.front.is_above_ground():
                     self.front.motor.set(self.SLOW_DOWN_SPEED)
+                    self.back_motor.set(-pid_output)
                 else:
                     self.front.motor.set(output)
             else:
@@ -154,6 +166,9 @@ class Climber:
                     self.back.motor.set(output)
             else:
                 self.back.motor.disable()
+
+            if self.back_direction == 0 and self.running:
+                self.back_motor.set(-pid_output)
 
         self.drive_motor.set(ctre.ControlMode.PercentOutput, self.drive_output)
 
