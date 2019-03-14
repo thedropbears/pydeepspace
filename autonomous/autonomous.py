@@ -60,8 +60,7 @@ class AutoBase(AutonomousStateMachine):
 
     def __init__(self):
         super().__init__()
-        self.coordinates: Coordinates
-        self.coordinates = left_coordinates
+        self.coordinates: Coordinates = left_coordinates
 
         self.completed_runs = 0
         self.desired_angle = 0
