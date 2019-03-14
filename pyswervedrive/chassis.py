@@ -144,8 +144,8 @@ class SwerveChassis:
                 vx, vy = self.vx, self.vy
             module.set_velocity(vx + vz_x, vy + vz_y, absolute_rotation=False)
 
-        if abs(math.hypot(self.vx, self.vy)) > 1:
-            self.heading_pid.setP(4.0)
+        if abs(math.hypot(self.vx, self.vy)) > 0.5:
+            self.heading_pid.setP(2.0)
         else:
             self.heading_pid.setP(6.0)
 
