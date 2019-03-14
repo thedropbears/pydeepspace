@@ -26,11 +26,11 @@ left_coordinates = Coordinates(
     start_pos=Waypoint(
         1.2 + SwerveChassis.LENGTH / 2, 0 + SwerveChassis.WIDTH / 2, 0, 2
     ),
-    front_cargo_bay=Waypoint(5.5 - SwerveChassis.LENGTH / 2, 0.3, 0, 0.75),
-    setup_loading_bay=Waypoint(3.3, 3.3, math.pi, 1),
+    front_cargo_bay=Waypoint(5.5 - SwerveChassis.LENGTH / 2, 0.3, 0, 1.5),
+    setup_loading_bay=Waypoint(3.3, 3, math.pi, 1),
     loading_bay=Waypoint(0.2 + SwerveChassis.LENGTH / 2, 3.4, math.pi, 1),
     side_cargo_bay_alignment_point=Waypoint(
-        6.6, 1.8 + SwerveChassis.WIDTH / 2, -math.pi / 2, 0.75
+        6.6, 1.8 + SwerveChassis.WIDTH / 2, -math.pi / 2, 1.5
     ),
     side_cargo_bay=Waypoint(6.6, 0.8 + SwerveChassis.WIDTH / 2, -math.pi / 2, 1),
 )
@@ -40,7 +40,7 @@ right_coordinates = Coordinates(
     setup_loading_bay=left_coordinates.setup_loading_bay.reflect(),
     loading_bay=left_coordinates.loading_bay.reflect(),
     side_cargo_bay_alignment_point=left_coordinates.side_cargo_bay_alignment_point.reflect(),
-    side_cargo_bay=left_coordinates.side_cargo_bay.reflect()
+    side_cargo_bay=left_coordinates.side_cargo_bay.reflect(),
 )
 
 
@@ -68,15 +68,16 @@ class AutoBase(AutonomousStateMachine):
         self.desired_angle_navx = 0
         self.minimum_path_completion = 0.85
 
-        self.acceleration = 1
-        self.deceleration = -0.5
+        self.acceleration = 2
+        self.deceleration = -0.25
 
         self.pursuit = PurePursuit(look_ahead=0.2, look_ahead_speed_modifier=0.25)
 
     def setup(self):
         self.hatch.has_hatch = True
-        self.hatch_intake.alignment_speed = 1.2
-        self.hatch_deposit.alignment_speed = 1.0
+        self.hatch_intake.alignment_speed = 0.75
+        self.hatch_deposit.alignment_speed = 0.75
+        self.vision.camera = 0
 
     def on_enable(self):
         super().on_enable()
@@ -143,7 +144,11 @@ class AutoBase(AutonomousStateMachine):
                 )
             elif self.completed_runs == 2:
                 waypoints = insert_trapezoidal_waypoints(
-                    (self.current_pos, self.coordinates.setup_loading_bay, self.coordinates.loading_bay),
+                    (
+                        self.current_pos,
+                        self.coordinates.setup_loading_bay,
+                        self.coordinates.loading_bay,
+                    ),
                     self.acceleration,
                     self.deceleration,
                 )
@@ -172,7 +177,7 @@ class AutoBase(AutonomousStateMachine):
     @property
     def current_pos(self):
         return Waypoint(
-            self.chassis.odometry_x, self.chassis.odometry_y, self.imu.getAngle(), 2
+            self.chassis.odometry_x, self.chassis.odometry_y, self.imu.getAngle(), 3
         )
 
     def follow_path(self):
@@ -183,7 +188,7 @@ class AutoBase(AutonomousStateMachine):
         self.chassis.set_velocity_heading(vx, vy, heading)
 
     def ready_for_vision(self):
-        if self.pursuit.waypoints[-1][4] - self.pursuit.distance_traveled < 1:
+        if self.pursuit.waypoints[-1][4] - self.pursuit.distance_traveled < 2:
             return True
         else:
             return False
@@ -191,6 +196,7 @@ class AutoBase(AutonomousStateMachine):
 
 class RightFullAuto(AutoBase):
     MODE_NAME = "Right Full Autonomous"
+    DEFAULT = True
 
     def __init__(self):
         super().__init__()
@@ -264,7 +270,6 @@ class RightSideOnly(SideOnlyBase):
 
 class DriveForwards(AutonomousStateMachine):
     MODE_NAME = "Drive Forwards - Default"
-    DEFAULT = True
 
     chassis: SwerveChassis
     imu: NavX
