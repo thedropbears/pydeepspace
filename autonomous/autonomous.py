@@ -319,3 +319,52 @@ class DriveForwards(AutonomousStateMachine):
             self.chassis.set_inputs(0, 0, 0, field_oriented=True)
             return
         self.chassis.set_velocity_heading(vx, vy, heading)
+
+
+class DoubleFrontBase(AutoBase):
+    @state(first=True)
+    def drive_to_cargo_bay(self, initial_call):
+        if initial_call:
+            if self.completed_runs == 0:
+                waypoints = insert_trapezoidal_waypoints(
+                    (self.current_pos, self.coordinates.front_cargo_bay),
+                    self.acceleration,
+                    self.deceleration,
+                )
+            elif self.completed_runs == 1:
+                waypoints = insert_trapezoidal_waypoints(
+                    (
+                        self.current_pos,
+                        self.coordinates.setup_loading_bay,
+                        self.coordinates.front_cargo_bay.reflect(),
+                    ),
+                    self.acceleration,
+                    self.deceleration,
+                )
+            else:
+                self.next_state("drive_to_loading_bay")
+                self.completed_runs += 1
+                return
+            self.pursuit.build_path(waypoints)
+        self.follow_path()
+        if (
+            self.vision.fiducial_in_sight and self.ready_for_vision()
+        ) or self.pursuit.completed_path:
+            self.next_state("deposit_hatch")
+            self.completed_runs += 1
+
+
+class LeftDoubleFront(DoubleFrontBase):
+    MODE_NAME = "Left Double Front Hatch"
+
+    def __init__(self):
+        super().__init__()
+        self.coordinates = left_coordinates
+
+
+class RightDoubleFront(DoubleFrontBase):
+    MODE_NAME = "Right Double Front Hatch"
+
+    def __init__(self):
+        super().__init__()
+        self.coordinates = right_coordinates
