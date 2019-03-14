@@ -42,8 +42,8 @@ class Hatch:
             self._retract()
         if (
             math.hypot(
-                self.fired_position[0] - self.chassis.position[0],
-                self.fired_position[1] - self.chassis.position[1],
+                self.fired_position[0] - self.chassis.odometry_x,
+                self.fired_position[1] - self.chassis.odometry_y,
             )
             > 0.5
         ):
