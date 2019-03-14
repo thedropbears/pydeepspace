@@ -235,12 +235,15 @@ class Robot(magicbot.MagicRobot):
             self.imu.resetHeading()
 
         # Start Button starts Climb State Machine
-        if self.gamepad.getStartButtonPressed():
+        if self.gamepad.getStartButtonPressed() and self.gamepad.getRawButtonPressed(5):
             self.climb_automation.start_climb_lv3()
 
         # Back Button Ends Climb State Machine
         if self.gamepad.getBackButtonPressed():
-            self.climb_automation.done()
+            if self.gamepad.getRawButtonPressed(5):
+                self.climb_automation.abort()
+            else:
+                self.climb_automation.done()
 
         # Cargo Floor Intake
         if self.gamepad.getAButtonPressed():
@@ -252,6 +255,18 @@ class Robot(magicbot.MagicRobot):
             self.chassis.set_heading_sp(
                 FieldAngle.CARGO_FRONT.value
             )  # Reversed side of robot
+
+        if self.gamepad.getPOV() != -1:
+            speed = 0.5
+            azimuth = math.radians(-self.gamepad.getPOV())
+            if self.cargo_component.has_cargo:
+                azimuth += math.pi
+            self.chassis.set_inputs(
+                speed * math.cos(azimuth),
+                speed * math.sin(azimuth),
+                0,
+                field_oriented=False,
+            )
 
     def robotPeriodic(self):
         # super().robotPeriodic()
