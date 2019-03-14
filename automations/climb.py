@@ -67,10 +67,7 @@ class ClimbAutomation(StateMachine):
     @state(must_finish=True)
     def aborting(self):
         self.climber.retract_all()
-        if (
-            self.climber.front_top_limit_switch.get()
-            and self.climber.back_top_limit_switch.get()
-        ):
+        if self.climber.front.is_retracted() and self.climber.back.is_retracted():
             self.chassis.heading_hold_on()
             self.done()
 
