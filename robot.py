@@ -109,6 +109,7 @@ class Robot(magicbot.MagicRobot):
         self.hatch_bottom_puncher = wpilib.Solenoid(0)
         self.hatch_left_puncher = wpilib.Solenoid(1)
         self.hatch_right_puncher = wpilib.Solenoid(2)
+        self.hatch_wedge_piston = wpilib.DoubleSolenoid(6, 3)
 
         self.hatch_left_limit_switch = wpilib.DigitalInput(8)
         self.hatch_right_limit_switch = wpilib.DigitalInput(9)
@@ -131,14 +132,19 @@ class Robot(magicbot.MagicRobot):
 
         self.spin_rate = 2.5
 
+    def autonomous(self):
+        self.imu.resetHeading()
+        super().autonomous()
+
     def disabledPeriodic(self):
         self.chassis.set_inputs(0, 0, 0)
-        self.imu.resetHeading()
         self.vision.execute()  # Keep the time offset calcs running
 
     def teleopInit(self):
         """Initialise driver control."""
         self.chassis.set_inputs(0, 0, 0)
+        self.hatch_intake.alignment_speed = 0.9
+        self.hatch_deposit.alignment_speed = 0.9
 
     def teleopPeriodic(self):
         """Allow the drivers to control the robot."""
@@ -208,10 +214,6 @@ class Robot(magicbot.MagicRobot):
             self.hatch.punch()
             self.hatch.clear_to_retract = True
 
-        # Manual Retraction of both climb legs
-        if self.gamepad.getXButtonPressed():
-            self.climber.retract_all()
-
         # Stops Cargo Intake Motor
         if self.gamepad.getBButtonPressed():
             self.cargo.outake_cargo_ship(force=True)
@@ -228,12 +230,15 @@ class Robot(magicbot.MagicRobot):
             self.imu.resetHeading()
 
         # Start Button starts Climb State Machine
-        if self.gamepad.getStartButtonPressed():
+        if self.gamepad.getStartButtonPressed() and self.gamepad.getRawButtonPressed(5):
             self.climb_automation.start_climb_lv3()
 
         # Back Button Ends Climb State Machine
         if self.gamepad.getBackButtonPressed():
-            self.climb_automation.done()
+            if self.gamepad.getRawButtonPressed(5):
+                self.climb_automation.abort()
+            else:
+                self.climb_automation.done()
 
         # Cargo Floor Intake
         if self.gamepad.getAButtonPressed():
@@ -245,6 +250,18 @@ class Robot(magicbot.MagicRobot):
             self.chassis.set_heading_sp(
                 FieldAngle.CARGO_FRONT.value
             )  # Reversed side of robot
+
+        if self.gamepad.getPOV() != -1:
+            speed = 0.5
+            azimuth = math.radians(-self.gamepad.getPOV())
+            if self.cargo_component.has_cargo:
+                azimuth += math.pi
+            self.chassis.set_inputs(
+                speed * math.cos(azimuth),
+                speed * math.sin(azimuth),
+                0,
+                field_oriented=False,
+            )
 
     def robotPeriodic(self):
         # super().robotPeriodic()
@@ -286,9 +303,6 @@ class Robot(magicbot.MagicRobot):
         if self.gamepad.getStartButton():
             self.climber.retract_all()
             self.climber.execute()
-        if self.gamepad.getBackButton():
-            self.climber.stop_all()
-            self.climber.execute()
 
         if self.gamepad.getPOV() != -1:
             speed = 0.1
@@ -299,6 +313,9 @@ class Robot(magicbot.MagicRobot):
                     speed * math.sin(azimuth),
                     absolute_rotation=True,
                 )
+
+        if self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0.5:
+            self.hatch_wedge_piston.set(wpilib.DoubleSolenoid.Value.kReverse)
 
 
 if __name__ == "__main__":

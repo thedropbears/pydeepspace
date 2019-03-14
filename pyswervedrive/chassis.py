@@ -1,4 +1,5 @@
 import math
+import time
 from typing import Tuple
 
 import numpy as np
@@ -40,7 +41,7 @@ class SwerveChassis:
         # Heading PID controller
         self.heading_pid = PIDController(
             Kp=6.0, Ki=0.0, Kd=0.05, measurement_source=self.imu.getAngle, period=1 / 50
-        )
+        )  # this gain is being changed depending on speed
         self.heading_pid.setInputRange(-math.pi, math.pi)
         self.heading_pid.setOutputRange(-3, 3)
         self.heading_pid.setContinuous()
@@ -65,6 +66,8 @@ class SwerveChassis:
             ],
             dtype=float,
         )
+
+        self.last_odometry_time = 0
         # wpilib.SmartDashboard.putData("heading_pid", self.heading_pid)
 
         # figure out the contribution of the robot's overall rotation about the
@@ -99,6 +102,8 @@ class SwerveChassis:
         self.odometry_updated = False
         for module in self.modules:
             module.reset_encoder_delta()
+
+        self.last_odometry_time = time.monotonic()
 
     def execute(self):
 
@@ -139,6 +144,11 @@ class SwerveChassis:
                 vx, vy = self.vx, self.vy
             module.set_velocity(vx + vz_x, vy + vz_y, absolute_rotation=False)
 
+        if abs(math.hypot(self.vx, self.vy)) > 0.5:
+            self.heading_pid.setP(2.0)
+        else:
+            self.heading_pid.setP(6.0)
+
     def update_odometry(self, *args):
         # TODO: re-enable if we end up not using callback method
         # if self.odometry_updated:
@@ -166,10 +176,15 @@ class SwerveChassis:
         # lambda_e = self.icre.estimate_lmda(q)
         # print(lambda_e)
 
+        now = time.monotonic()
         vx, vy, vz = self.robot_movement_from_odometry(velocity_outputs, heading)
-        delta_x, delta_y, delta_z = self.robot_movement_from_odometry(
-            odometry_outputs, heading, z_vel=vz
-        )
+        # delta_x, delta_y, delta_z = self.robot_movement_from_odometry(
+        # odometry_outputs, heading, z_vel=self.imu.getHeadingRate()
+        # )
+
+        delta_t = now - self.last_odometry_time
+        delta_x = vx * delta_t
+        delta_y = vy * delta_t
 
         self.odometry_x += delta_x
         self.odometry_y += delta_y
@@ -182,6 +197,8 @@ class SwerveChassis:
         self.odometry_updated = True
 
         self.set_modules_drive_brake()
+
+        self.last_odometry_time = now
 
     def robot_movement_from_odometry(self, odometry_outputs, angle, z_vel=0):
         lstsq_ret = np.linalg.lstsq(self.A, odometry_outputs, rcond=None)

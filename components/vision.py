@@ -84,7 +84,7 @@ class Vision:
         if hal.isSimulation():
             self.ntinst.startTestMode(server=False)
         else:
-            self.ntinst.startClient("frcvision.local")
+            self.ntinst.startClient("10.47.74.6")  # Raspberry pi's IP
         self.ntinst.setUpdateRate(1)  # ensure our flush calls flush immediately
 
         self.fiducial_x_entry = self.ntinst.getEntry("/vision/fiducial_x")
@@ -129,7 +129,7 @@ class Vision:
 
     def _get_pose_delta(self, t: float) -> Tuple[float, float, float]:
         """Search the stored odometry and return the position difference between now and the specified time."""
-        current = self.odometry[0]
+        current = previous = self.odometry[0]
         for odom in self.odometry:
             if odom.t >= t:
                 previous = odom

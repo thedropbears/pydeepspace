@@ -31,7 +31,7 @@ class Aligner(StateMachine):
         self.last_vision = 0
         self.direction = 1
 
-    alignment_speed = tunable(1.25)  # m/s
+    alignment_speed = tunable(0.9)  # m/s being changed in auto and teleop init
     alignment_kp_y = tunable(2)
     lookahead_factor = tunable(3)
 
@@ -58,6 +58,7 @@ class Aligner(StateMachine):
             self.successful = False
             self.last_vision = state_tm
             self.chassis.automation_running = True
+            self.counter = 0
 
         if not self.vision.fiducial_in_sight:
             # self.chassis.set_inputs(0, 0, 0)
@@ -65,10 +66,13 @@ class Aligner(StateMachine):
             self.chassis.set_inputs(
                 self.alignment_speed * self.direction, 0, 0, field_oriented=False
             )
-            if state_tm - self.last_vision > 0.5:
+            if state_tm - self.last_vision > 1.5 / self.alignment_speed:
                 self.chassis.set_inputs(0, 0, 0)
                 self.next_state("success")
         else:
+            if self.counter < 1:
+                self.logger.info("Seen vision")
+                self.counter += 1
             self.last_vision = state_tm
             fiducial_x, fiducial_y, delta_heading = self.vision.get_fiducial_position()
             fiducial_x /= self.lookahead_factor
@@ -116,7 +120,7 @@ class CargoDepositAligner(Aligner):
 
     @state(must_finish=True)
     def success(self):
-        self.cargo.outake_cargo_ship()
+        self.cargo.outake_cargo_ship(force=True)
         self.done()
 
 

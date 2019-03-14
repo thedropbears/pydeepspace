@@ -129,6 +129,7 @@ class SwerveModule:
         self.drive_motor.configVoltageCompSaturation(9, timeoutMs=10)
         self.drive_motor.configPeakCurrentLimit(50, timeoutMs=10)
         self.drive_motor.configContinuousCurrentLimit(40, timeoutMs=10)
+        self.drive_motor.configPeakCurrentDuration(10, timeoutMs=10)  # TODO tune this
         self.drive_motor.enableCurrentLimit(True)
         self.drive_motor.enableVoltageCompensation(True)
 
