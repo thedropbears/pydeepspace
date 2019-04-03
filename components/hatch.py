@@ -1,63 +1,55 @@
-import math
-
 import wpilib
-
-from pyswervedrive.chassis import SwerveChassis
 
 
 class Hatch:
 
-    chassis: SwerveChassis
-
-    hatch_bottom_puncher: wpilib.Solenoid
-    hatch_left_puncher: wpilib.Solenoid
-    hatch_right_puncher: wpilib.Solenoid
-    hatch_wedge_piston: wpilib.DoubleSolenoid
+    fingers: wpilib.DoubleSolenoid
+    punchers: wpilib.Solenoid
+    enable_piston: wpilib.DoubleSolenoid
 
     left_limit_switch: wpilib.DigitalInput
     right_limit_switch: wpilib.DigitalInput
 
     def setup(self):
         self.has_hatch = False
+        self._fingers_state = wpilib.DoubleSolenoid.Value.kReverse
+        self.enable_hatch = False
 
     def on_enable(self):
         self._punch_on = False
-        self.hatch_wedge_piston.set(wpilib.DoubleSolenoid.Value.kForward)
-        self.clear_to_retract = False
-        self.fired_position = 0, 0
+        self.enable_piston.set(wpilib.DoubleSolenoid.Value.kForward)
         self.loop_counter = 0
+        self.enable_counter = 0
 
     def execute(self):
         """Run at the end of every control loop iteration."""
         delay = -1
-        self.hatch_bottom_puncher.set(self._punch_on)
-        self.hatch_left_puncher.set(self._punch_on and self.loop_counter > delay)
-        self.hatch_right_puncher.set(self._punch_on and self.loop_counter > delay)
+        self.fingers.set(self._fingers_state)
+        self.punchers.set(self._punch_on and self.loop_counter > delay)
         if self._punch_on and self.loop_counter > delay:
             self.has_hatch = False
         self.loop_counter += 1
-        if self.is_contained() and self.clear_to_retract:
-            self.has_hatch = True
-        if self.clear_to_retract:
-            self._retract()
-        if (
-            math.hypot(
-                self.fired_position[0] - self.chassis.odometry_x,
-                self.fired_position[1] - self.chassis.odometry_y,
-            )
-            > 0.5
-        ):
-            self.clear_to_retract = True
+        self.enable_counter += 1
+        if self.enable_hatch:
+            if self.enable_counter > 5:
+                self.extend_fingers()
+                self.has_hatch = True
+                self.enable_hatch = False
+        # if self.is_contained():
+        #     self.has_hatch = True
 
     def punch(self):
         self.loop_counter = 0
         self._punch_on = True
-        self.clear_to_retract = False
-        self.fired_position = self.chassis.position
 
-    def _retract(self):
+    def retract(self):
         self._punch_on = False
-        self.clear_to_retract = False
+
+    def extend_fingers(self):
+        self._fingers_state = wpilib.DoubleSolenoid.Value.kForward
+
+    def retract_fingers(self):
+        self._fingers_state = wpilib.DoubleSolenoid.Value.kReverse
 
     def is_contained(self):
         return any(

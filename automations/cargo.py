@@ -51,7 +51,7 @@ class CargoManager(StateMachine):
     def outtaking_cargo(self, initial_call, state_tm):
         self.cargo_component.outtake()
 
-        if state_tm > 0.5:
+        if state_tm > 1:
             self.vision.use_hatch()
             self.done()
 

@@ -115,7 +115,7 @@ class SwerveModule:
         # Reset drive encoder to 0
         self.drive_motor.setSelectedSensorPosition(0)
         # TODO: change back to original constants once we get on to real robot
-        self.drive_motor.config_kP(0, 0.015, 10)
+        self.drive_motor.config_kP(0, 0.05, 10)
         self.drive_motor.config_kI(0, 0, 10)
         self.drive_motor.config_kD(0, 0, 10)
         self.drive_motor.config_kF(0, 1024.0 / self.DRIVE_FREE_SPEED, 10)

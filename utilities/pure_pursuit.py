@@ -103,9 +103,6 @@ class PurePursuit:
             else:
                 return intersection_2
         else:
-            # print(
-            #     f"No intersection start {waypoint_start} end {waypoint_end} robot {robot_position}"
-            # )
             return None
 
     def build_path(self, waypoints: Sequence[Waypoint]) -> None:
@@ -183,8 +180,10 @@ class PurePursuit:
         """
         Find the how fast the robot should be moving at its current point.
         """
-        local_robot_distance = distance_along_path - start_path_distance
         local_end_distance = end_path_distance - start_path_distance
+        local_robot_distance = min(
+            max(distance_along_path - start_path_distance, 0), local_end_distance
+        )
         speed_difference = end_speed - start_speed
         portion_path_completed = local_robot_distance / local_end_distance
         target_speed = speed_difference * portion_path_completed + start_speed

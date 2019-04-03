@@ -13,9 +13,10 @@ from automations.alignment import (
     CargoDepositAligner,
 )
 from automations.cargo import CargoManager
+from automations.climb import ClimbAutomation
+from automations.hatch import HatchAutomation
 from components.cargo import CargoManipulator
 from components.hatch import Hatch
-from automations.climb import ClimbAutomation
 from components.vision import Vision
 from components.climb import Climber
 from pyswervedrive.chassis import SwerveChassis
@@ -23,18 +24,12 @@ from pyswervedrive.module import SwerveModule
 from utilities.functions import constrain_angle, rescale_js
 from utilities.navx import NavX
 
-ROCKET_ANGLE = 0.52  # measured field angle
-
 
 class FieldAngle(enum.Enum):
     CARGO_FRONT = 0
     CARGO_RIGHT = math.pi / 2
     CARGO_LEFT = -math.pi / 2
     LOADING_STATION = math.pi
-    ROCKET_LEFT_FRONT = ROCKET_ANGLE
-    ROCKET_RIGHT_FRONT = -ROCKET_ANGLE
-    ROCKET_LEFT_BACK = math.pi - ROCKET_ANGLE
-    ROCKET_RIGHT_BACK = -math.pi + ROCKET_ANGLE
 
     @classmethod
     def closest(cls, robot_heading: float) -> "FieldAngle":
@@ -53,6 +48,7 @@ class Robot(magicbot.MagicRobot):
     climb_automation: ClimbAutomation
     hatch_deposit: HatchDepositAligner
     hatch_intake: HatchIntakeAligner
+    hatch_automation: HatchAutomation
 
     # Actuators
     cargo_component: CargoManipulator
@@ -71,33 +67,31 @@ class Robot(magicbot.MagicRobot):
         # a + + b - + c - - d + -
         x_dist = 0.2625
         y_dist = 0.2665
-        self.module_a = SwerveModule(  # front right module
+        self.module_a = SwerveModule(  # front left module
             "a",
-            steer_talon=ctre.TalonSRX(3),
-            drive_talon=ctre.TalonSRX(4),
+            steer_talon=ctre.TalonSRX(7),
+            drive_talon=ctre.TalonSRX(8),
             x_pos=x_dist,
             y_pos=y_dist,
-            reverse_drive_encoder=True,
-            reverse_drive_direction=True,
         )
-        self.module_b = SwerveModule(  # front left module
+        self.module_b = SwerveModule(  # front right module
             "b",
-            steer_talon=ctre.TalonSRX(5),
-            drive_talon=ctre.TalonSRX(6),
+            steer_talon=ctre.TalonSRX(3),
+            drive_talon=ctre.TalonSRX(4),
             x_pos=-x_dist,
             y_pos=y_dist,
         )
         self.module_c = SwerveModule(  # bottom left module
             "c",
             steer_talon=ctre.TalonSRX(1),
-            drive_talon=ctre.TalonSRX(2),
+            drive_talon=ctre.TalonSRX(6),
             x_pos=-x_dist,
             y_pos=-y_dist,
         )
         self.module_d = SwerveModule(  # bottom right module
             "d",
-            steer_talon=ctre.TalonSRX(7),
-            drive_talon=ctre.TalonSRX(8),
+            steer_talon=ctre.TalonSRX(23),
+            drive_talon=ctre.TalonSRX(24),
             x_pos=x_dist,
             y_pos=-y_dist,
         )
@@ -106,10 +100,9 @@ class Robot(magicbot.MagicRobot):
         wpilib.SmartDashboard.putData("Gyro", self.imu.ahrs)
 
         # hatch objects
-        self.hatch_bottom_puncher = wpilib.Solenoid(0)
-        self.hatch_left_puncher = wpilib.Solenoid(1)
-        self.hatch_right_puncher = wpilib.Solenoid(2)
-        self.hatch_wedge_piston = wpilib.DoubleSolenoid(6, 3)
+        self.hatch_fingers = wpilib.DoubleSolenoid(7, 6)
+        self.hatch_punchers = wpilib.Solenoid(0)
+        self.hatch_enable_piston = wpilib.DoubleSolenoid(3, 2)
 
         self.hatch_left_limit_switch = wpilib.DigitalInput(8)
         self.hatch_right_limit_switch = wpilib.DigitalInput(9)
@@ -130,10 +123,15 @@ class Robot(magicbot.MagicRobot):
         self.joystick = wpilib.Joystick(0)
         self.gamepad = wpilib.XboxController(1)
 
-        self.spin_rate = 2.5
+        self.spin_rate = 1.5
 
     def autonomous(self):
         self.imu.resetHeading()
+        self.chassis.set_heading_sp(0)
+        self.hatch.enable_hatch = True
+        self.hatch_intake.alignment_speed = 0.5
+        self.hatch_deposit.alignment_speed = 0.5
+        self.chassis.derate_drive_modules(6)
         super().autonomous()
 
     def disabledPeriodic(self):
@@ -143,8 +141,9 @@ class Robot(magicbot.MagicRobot):
     def teleopInit(self):
         """Initialise driver control."""
         self.chassis.set_inputs(0, 0, 0)
-        self.hatch_intake.alignment_speed = 0.9
-        self.hatch_deposit.alignment_speed = 0.9
+        self.hatch_intake.alignment_speed = 0.5
+        self.hatch_deposit.alignment_speed = 0.5
+        self.chassis.derate_drive_modules(9)
 
     def teleopPeriodic(self):
         """Allow the drivers to control the robot."""
@@ -209,10 +208,18 @@ class Robot(magicbot.MagicRobot):
                     self.hatch_deposit.engage()
             self.chassis.set_heading_sp(angle.value)
 
-        # Hatch Manual Fire/Retract
-        if self.joystick.getRawButtonPressed(5):
-            self.hatch.punch()
-            self.hatch.clear_to_retract = True
+        # Hatch Manual Outake/Intake
+        if self.joystick.getRawButtonPressed(5) or self.gamepad.getBumperPressed(6):
+            angle = FieldAngle.closest(self.imu.getAngle())
+            self.logger.info("closest field angle: %s", angle)
+            if angle is not FieldAngle.LOADING_STATION:
+                self.hatch_automation.outake()
+            else:
+                self.hatch_automation.grab()
+
+        if self.gamepad.getXButtonPressed():
+            self.hatch.retract_fingers()
+            self.hatch.retract()
 
         # Stops Cargo Intake Motor
         if self.gamepad.getBButtonPressed():
@@ -228,6 +235,7 @@ class Robot(magicbot.MagicRobot):
         # Resets the IMU's Heading
         if self.joystick.getRawButtonPressed(7):
             self.imu.resetHeading()
+            self.chassis.set_heading_sp(0)
 
         # Start Button starts Climb State Machine
         if self.gamepad.getStartButtonPressed() and self.gamepad.getRawButtonPressed(5):
@@ -252,7 +260,7 @@ class Robot(magicbot.MagicRobot):
             )  # Reversed side of robot
 
         if self.gamepad.getPOV() != -1:
-            speed = 0.5
+            speed = 0.65
             azimuth = math.radians(-self.gamepad.getPOV())
             if self.cargo_component.has_cargo:
                 azimuth += math.pi
@@ -315,7 +323,7 @@ class Robot(magicbot.MagicRobot):
                 )
 
         if self.gamepad.getTriggerAxis(self.gamepad.Hand.kLeft) > 0.5:
-            self.hatch_wedge_piston.set(wpilib.DoubleSolenoid.Value.kReverse)
+            self.hatch_enable_piston.set(wpilib.DoubleSolenoid.Value.kReverse)
 
 
 if __name__ == "__main__":

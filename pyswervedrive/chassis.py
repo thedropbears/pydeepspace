@@ -36,11 +36,17 @@ class SwerveChassis:
         self.field_oriented = False
         self.momentum = False
         self.automation_running = False
+        self.acceleration = 2
+        self.deceleration = -0.25
 
     def setup(self):
         # Heading PID controller
         self.heading_pid = PIDController(
-            Kp=6.0, Ki=0.0, Kd=0.05, measurement_source=self.imu.getAngle, period=1 / 50
+            Kp=1.5,
+            Ki=0.01,
+            Kd=0.03,
+            measurement_source=self.imu.getAngle,
+            period=1 / 50,
         )  # this gain is being changed depending on speed
         self.heading_pid.setInputRange(-math.pi, math.pi)
         self.heading_pid.setOutputRange(-3, 3)
@@ -144,10 +150,10 @@ class SwerveChassis:
                 vx, vy = self.vx, self.vy
             module.set_velocity(vx + vz_x, vy + vz_y, absolute_rotation=False)
 
-        if abs(math.hypot(self.vx, self.vy)) > 0.5:
-            self.heading_pid.setP(2.0)
-        else:
-            self.heading_pid.setP(6.0)
+        # if abs(math.hypot(self.vx, self.vy)) > 0.5:
+        #     self.heading_pid.setP(2.0)
+        # else:
+        #     self.heading_pid.setP(6.0)
 
     def update_odometry(self, *args):
         # TODO: re-enable if we end up not using callback method
@@ -286,6 +292,10 @@ class SwerveChassis:
     @property
     def all_aligned(self):
         return all(module.aligned for module in self.modules)
+
+    def derate_drive_modules(self, max_voltage: int):
+        for module in self.modules:
+            module.drive_motor.configVoltageCompSaturation(max_voltage, timeoutMs=10)
 
     def set_modules_drive_coast(self):
         for module in self.modules:

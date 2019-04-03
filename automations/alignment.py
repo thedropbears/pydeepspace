@@ -1,11 +1,8 @@
-import math
-
 from magicbot import tunable
 from magicbot.state_machine import StateMachine, state
 
 from automations.cargo import CargoManager
-
-from components.hatch import Hatch
+from automations.hatch import HatchAutomation
 from components.vision import Vision
 from pyswervedrive.chassis import SwerveChassis
 
@@ -30,10 +27,11 @@ class Aligner(StateMachine):
         self.successful = False
         self.last_vision = 0
         self.direction = 1
+        self.tolerance = 0.1
 
-    alignment_speed = tunable(0.9)  # m/s being changed in auto and teleop init
-    alignment_kp_y = tunable(2)
-    lookahead_factor = tunable(3)
+    alignment_speed = tunable(0.5)  # m/s changed in teleop and autonomous
+    alignment_kp_y = tunable(1.5)
+    # lookahead_factor = tunable(4)
 
     def on_disable(self):
         self.done()
@@ -59,14 +57,23 @@ class Aligner(StateMachine):
             self.last_vision = state_tm
             self.chassis.automation_running = True
             self.counter = 0
-
-        if not self.vision.fiducial_in_sight:
+            self.last_range = 2.5
+            # self.v = 0
+        # self.u = self.chassis.speed
+        # if abs(self.v - self.alignment_speed) > self.tolerance:
+        #     if self.v > self.u:
+        #         a = self.chassis.decceleration
+        #     if self.v < self.u:
+        #         a = self.chassis.acceleration
+        #     self.v = self.u + a * state_tm
+        fiducial_x, fiducial_y, delta_heading = self.vision.get_fiducial_position()
+        if not self.vision.fiducial_in_sight or abs(fiducial_x) > abs(self.last_range):
             # self.chassis.set_inputs(0, 0, 0)
             # self.next_state("success")
             self.chassis.set_inputs(
                 self.alignment_speed * self.direction, 0, 0, field_oriented=False
             )
-            if state_tm - self.last_vision > 1.5 / self.alignment_speed:
+            if state_tm - self.last_vision > self.last_range / self.alignment_speed:
                 self.chassis.set_inputs(0, 0, 0)
                 self.next_state("success")
         else:
@@ -74,20 +81,20 @@ class Aligner(StateMachine):
                 self.logger.info("Seen vision")
                 self.counter += 1
             self.last_vision = state_tm
-            fiducial_x, fiducial_y, delta_heading = self.vision.get_fiducial_position()
-            fiducial_x /= self.lookahead_factor
-            norm = math.hypot(fiducial_x, fiducial_y)
-            vx = fiducial_x / norm * self.alignment_speed
-            vy = fiducial_y / norm * self.alignment_speed
+            self.last_range = fiducial_x
+            # fiducial_x /= self.lookahead_factor
+            # norm = math.hypot(fiducial_x, fiducial_y)
+            # vx = fiducial_x / norm * self.alignment_speed
+            # vy = fiducial_y / norm * self.alignment_speed
             if fiducial_x > 0:
                 # Target in front of us means we are using the hatch camera - move forwards
-                # vx = self.alignment_speed * (1 - abs(fiducial_y/1.5))
-                self.direction = 1
+                vx = self.alignment_speed * (1 - min(abs(fiducial_y), 1.5) / 1.5)
             else:
                 # Target behind us means we are using the cargo camera - move backwards
-                # vx = -self.alignment_speed * (1 - abs(fiducial_y/1.5))
-                self.direction = -1
-            # vy = max(min(fiducial_y * self.alignment_kp_y, 1), -1)
+                vx = -self.alignment_speed * (1 - min(abs(fiducial_y), 1.5) / 1.5)
+            vy = self.alignment_speed * max(
+                min(fiducial_y * self.alignment_kp_y, 1), -1
+            )
             vx, vy = rotate_vector(vx, vy, -delta_heading)
             self.chassis.set_inputs(vx, vy, 0, field_oriented=False)
 
@@ -103,13 +110,12 @@ class Aligner(StateMachine):
 class HatchDepositAligner(Aligner):
 
     VERBOSE_LOGGING = True
-    hatch: Hatch
+    hatch_automation: HatchAutomation
 
     @state(must_finish=True)
     def success(self, state_tm, initial_call):
         if initial_call:
-            self.hatch.punch()
-        if state_tm > 1:
+            self.hatch_automation.outake()
             self.done()
 
 
@@ -118,12 +124,20 @@ class CargoDepositAligner(Aligner):
     VERBOSE_LOGGING = True
     cargo: CargoManager
 
+    def setup(self):
+        super().setup()
+        self.direction = -1
+
     @state(must_finish=True)
     def success(self):
-        self.cargo.outake_cargo_ship(force=True)
         self.done()
 
 
 class HatchIntakeAligner(Aligner):
     VERBOSE_LOGGING = True
-    hatch: Hatch
+    hatch_automation: HatchAutomation
+
+    @state(must_finish=True)
+    def success(self):
+        self.hatch_automation.grab()
+        self.done()

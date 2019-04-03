@@ -143,8 +143,8 @@ class Vision:
     def pong(self) -> None:
         """Receive a pong from the RasPi to determine the connection latency."""
         if abs(self.rio_pong_time - self.last_pong) > 1e-4:  # Floating point comparison
-            alpha = 0.0  # Exponential averaging
-            self.latency = alpha * self.latency + (1 - alpha) * (
+            alpha = 0.9  # Exponential averaging
+            self.latency = (1 - alpha) * self.latency + alpha * (
                 self.rio_pong_time - self.raspi_pong_time
             )
             self.last_pong = self.rio_pong_time

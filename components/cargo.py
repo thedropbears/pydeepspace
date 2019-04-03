@@ -4,13 +4,12 @@ import math
 import ctre
 import rev
 import wpilib
-import wpilib_controller
 
 from components.vision import Vision
 
 
 class Height(enum.Enum):
-    FLOOR = 18.8
+    FLOOR = 18.6
     CARGO_SHIP = 0
     LOADING_STATION = 0
 
@@ -24,8 +23,8 @@ class CargoManipulator:
 
     intake_switch: wpilib.DigitalInput
 
-    GEAR_RATIO = 49 * 84 / 50
-    UNITS_PER_RADIAN = 20 / math.radians(105)  # measured
+    GEAR_RATIO = 7 * 5 * 84 / 50
+    UNITS_PER_RADIAN = 18.6 / math.radians(105)  # measured
 
     INTAKE_SPEED = -0.75
     SLOW_INTAKE_SPEED = -0.2
@@ -41,13 +40,17 @@ class CargoManipulator:
         self.intake_motor.setNeutralMode(ctre.NeutralMode.Brake)
 
         self.encoder = self.arm_motor.getEncoder()
-        self.pid_controller = wpilib_controller.PIDController(
-            Kp=0.032,
-            Ki=0.0,
-            Kd=0.0,
-            measurement_source=self.encoder.getPosition,
-            period=1 / 50,
-        )
+
+        self.pid_controller = self.arm_motor.getPIDController()
+        self.pid_controller.setP(5e-4)
+        self.pid_controller.setI(1e-6)
+        self.pid_controller.setD(0)
+        self.pid_controller.setIZone(0)
+        self.pid_controller.setFF(1 / 5675)
+        self.pid_controller.setOutputRange(-1, 1)
+        self.pid_controller.setSmartMotionMaxVelocity(1200)  # rpm
+        self.pid_controller.setSmartMotionMaxAccel(1000)  # rpm/s
+        self.pid_controller.setSmartMotionAllowedClosedLoopError(0)
         self.pid_controller.setOutputRange(-1, 1)
 
         self.top_limit_switch = self.arm_motor.getReverseLimitSwitch(
@@ -56,19 +59,16 @@ class CargoManipulator:
         self.bottom_limit_switch = self.arm_motor.getForwardLimitSwitch(
             rev.LimitSwitchPolarity.kNormallyOpen
         )
+        self.top_limit_switch.enableLimitSwitch(True)
+        self.bottom_limit_switch.enableLimitSwitch(True)
 
         self.setpoint = Height.LOADING_STATION.value
         self.tolerance = 0.1
         self.has_cargo = False
 
-        # wpilib.SmartDashboard.putData("cargo_pid", self.pid_controller)
-
     def execute(self) -> None:
         self.intake_motor.set(ctre.ControlMode.PercentOutput, self.intake_motor_output)
-
-        self.pid_controller.setReference(self.setpoint)
-        output = self.pid_controller.update()
-        self.arm_motor.set(output)
+        self.pid_controller.setReference(self.setpoint, rev.ControlType.kSmartMotion)
 
         if self.is_contained():
             self.has_cargo = True
