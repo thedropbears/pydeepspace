@@ -27,7 +27,7 @@ class CargoManipulator:
     UNITS_PER_RADIAN = 18.6 / math.radians(105)  # measured
 
     INTAKE_SPEED = -0.75
-    SLOW_INTAKE_SPEED = -0.2
+    SLOW_INTAKE_SPEED = -0.4
     OUTTAKE_SPEED = 1.0
 
     def __init__(self):
@@ -37,7 +37,7 @@ class CargoManipulator:
         self.arm_motor.setIdleMode(rev.IdleMode.kBrake)
         self.arm_motor.setInverted(False)
 
-        self.intake_motor.setNeutralMode(ctre.NeutralMode.Brake)
+        self.intake_motor.setNeutralMode(ctre.NeutralMode.Coast)
 
         self.encoder = self.arm_motor.getEncoder()
 
