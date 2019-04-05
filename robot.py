@@ -69,15 +69,15 @@ class Robot(magicbot.MagicRobot):
         y_dist = 0.2665
         self.module_a = SwerveModule(  # front left module
             "a",
-            steer_talon=ctre.TalonSRX(7),
-            drive_talon=ctre.TalonSRX(8),
+            steer_talon=ctre.TalonSRX(3),
+            drive_talon=ctre.TalonSRX(4),
             x_pos=x_dist,
             y_pos=y_dist,
         )
         self.module_b = SwerveModule(  # front right module
             "b",
-            steer_talon=ctre.TalonSRX(3),
-            drive_talon=ctre.TalonSRX(4),
+            steer_talon=ctre.TalonSRX(7),
+            drive_talon=ctre.TalonSRX(8),
             x_pos=-x_dist,
             y_pos=y_dist,
         )
